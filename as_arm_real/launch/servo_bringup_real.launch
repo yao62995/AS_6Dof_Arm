@@ -1,0 +1,5 @@
+<launch>
+  <node name="servo_reader" pkg="as_arm_real" type="servo_read.py" output="screen"/>
+  <node name="servo_listener" pkg="as_arm_real" type="servo_write.py" output="screen"/>
+  <node name="gripper_listener" pkg="as_arm_real" type="gripper_write.py" output="screen"/>
+</launch>

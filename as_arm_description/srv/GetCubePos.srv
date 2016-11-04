@@ -1,0 +1,13 @@
+# cube name
+string name
+---
+# get status, 0 is OK, >0 means error
+int8 status
+# position xyz
+float32 x
+float32 y
+float32 z
+# orientation rpy
+float32 r
+float32 p
+float32 y

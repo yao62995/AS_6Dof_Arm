@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+    <!-- ////  bottom link -> sink bottom link  ////-->
+    <joint name="sink_bottom_joint" type="fixed">
+        <origin xyz="-${SINK_WIDTH/2+0.07} 0 0" rpy="0 0 0"/>
+        <parent link="bottom_link"/>
+        <child link="sink_bottom_link"/>
+    </joint>
+
+    <link name="sink_bottom_link">
+        <visual>
+            <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WIDTH} ${SINK_WIDTH} 0.02"/>
+            </geometry>
+            <material name="Black"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WIDTH} ${SINK_WIDTH} 0.02"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <gazebo reference="sink_bottom_link">
+        <material>Gazebo/Black</material>
+    </gazebo>
+
+    <!-- //// sink bottom link -> sink wall left link  ////-->
+    <joint name="sink_wall_left_joint" type="fixed">
+        <origin xyz="0 -${SINK_WIDTH/2-SINK_WALL_THICK/2} 0" rpy="0 0 0"/>
+        <parent link="sink_bottom_link"/>
+        <child link="sink_wall_left"/>
+    </joint>
+
+    <link name="sink_wall_left">
+        <visual>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WIDTH} ${SINK_WALL_THICK} ${SINK_DEPTH}"/>
+            </geometry>
+            <material name="Gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WIDTH} ${SINK_WALL_THICK} ${SINK_DEPTH}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- //// sink bottom link -> sink wall right link  ////-->
+    <joint name="sink_wall_right_joint" type="fixed">
+        <origin xyz="0 ${SINK_WIDTH/2-SINK_WALL_THICK/2} 0" rpy="0 0 0"/>
+        <parent link="sink_bottom_link"/>
+        <child link="sink_wall_right"/>
+    </joint>
+
+    <link name="sink_wall_right">
+        <visual>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WIDTH} ${SINK_WALL_THICK} ${SINK_DEPTH}"/>
+            </geometry>
+            <material name="Gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WIDTH} ${SINK_WALL_THICK} ${SINK_DEPTH}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- //// sink bottom link -> sink wall up link  ////-->
+    <joint name="sink_wall_up_joint" type="fixed">
+        <origin xyz="-${SINK_WIDTH/2-SINK_WALL_THICK/2} 0 0" rpy="0 0 0"/>
+        <parent link="sink_bottom_link"/>
+        <child link="sink_wall_up"/>
+    </joint>
+
+    <link name="sink_wall_up">
+        <visual>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WALL_THICK} ${SINK_WIDTH} ${SINK_DEPTH}"/>
+            </geometry>
+            <material name="Gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WALL_THICK} ${SINK_WIDTH} ${SINK_DEPTH}"/>
+            </geometry>
+        </collision>
+    </link>
+
+    <!-- //// sink bottom link -> sink wall down link  ////-->
+    <joint name="sink_wall_down_joint" type="fixed">
+        <origin xyz="${SINK_WIDTH/2-SINK_WALL_THICK/2} 0 0" rpy="0 0 0"/>
+        <parent link="sink_bottom_link"/>
+        <child link="sink_wall_down"/>
+    </joint>
+
+    <link name="sink_wall_down">
+        <visual>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WALL_THICK} ${SINK_WIDTH} ${SINK_DEPTH}"/>
+            </geometry>
+            <material name="Gray"/>
+        </visual>
+        <collision>
+            <origin xyz="0 0 ${SINK_DEPTH/2}" rpy="0 0 0"/>
+            <geometry>
+                <box size="${SINK_WALL_THICK} ${SINK_WIDTH} ${SINK_DEPTH}"/>
+            </geometry>
+        </collision>
+    </link>
+
+
+
+</robot>

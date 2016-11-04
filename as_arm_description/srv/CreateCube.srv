@@ -1,0 +1,13 @@
+# cube name
+string name
+# cube length
+float32 l
+# cube  width
+float32 w
+# cube height
+float32 h
+# cube color
+string color
+---
+# return status, 0 is OK, >0 means error
+int8 status

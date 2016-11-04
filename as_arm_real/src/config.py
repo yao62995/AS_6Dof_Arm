@@ -1,0 +1,1 @@
+TTY_PROT = "/dev/ttyACM0"

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<robot name="simple_box" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <property name="BOX_SIZE" value="0.02"/>
+  <link name="cube1">
+    <inertial>
+      <origin xyz="-0.18 0 0" />
+      <mass value="1.0" />
+      <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.18 0 0.5"/>
+      <geometry>
+        <box size="${BOX_SIZE} ${BOX_SIZE} ${BOX_SIZE}" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="-0.18 0 0.5"/>
+      <geometry>
+        <box size="${BOX_SIZE} ${BOX_SIZE} ${BOX_SIZE}" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="cube1">
+    <material>Gazebo/Blue</material>
+  </gazebo>
+
+  <!--link name="cube2">
+    <inertial>
+      <origin xyz="-0.20 0.02 0" />
+      <mass value="1.0" />
+      <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.18 0 0.5"/>
+      <geometry>
+        <box size="${BOX_SIZE} ${BOX_SIZE} ${BOX_SIZE}" />
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="-0.18 0 0.5"/>
+      <geometry>
+        <box size="${BOX_SIZE} ${BOX_SIZE} ${BOX_SIZE}" />
+      </geometry>
+    </collision>
+  </link>
+  <gazebo reference="cube2">
+    <material>Gazebo/Yellow</material>
+  </gazebo-->
+</robot>

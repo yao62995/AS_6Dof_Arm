@@ -1,0 +1,54 @@
+#!/bin/bash
+
+=======================URDF相关：===========================
+生成URDF文件
+rosrun xacro xacro.py -o as_arm.urdf as_arm.xacro
+
+检查URDF文件
+check_urdf as_arm.urdf
+
+显示URDF文件
+roslaunch urdf_tutorial display.launch model:='$(find as_arm_description)/urdf/as_arm.urdf'
+
+启动moveit助手
+rosrun moveit_setup_assistant moveit_setup_assistant
+
+创建包
+catkin_create_pkg as_arm_xxx std_msgs rospy roscpp
+
+
+======================Ｌaunch启动=============================
+启动gazebo仿真环境：
+roslaunch as_arm_gazebo as_arm_bringup.launch
+
+启动moveit Ｄemo：
+roslaunch as_arm_moveit_config demo.launch
+
+启动grasp 生成器
+roslaunch as_arm_gazebo grasp_generator_server.launch
+
+
+
+================== 话题相关 ======================
+查看摄像头图像：
+rosrun image_view image_view image:=/camera/image_raw
+
+查看话题列表：
+rostopic list
+
+=============== moveit.rviz =============
+line: 648
+    - Arrow Length: 0.1
+      Class: rviz/PoseArray
+      Color: 255; 25; 0
+      Enabled: true
+      Name: Grasp
+      Topic: /grasps
+      Value: true
+    - Arrow Length: 0.1
+      Class: rviz/PoseArray
+      Color: 85; 0; 255
+      Enabled: true
+      Name: Place
+      Topic: /places
+      Value: true

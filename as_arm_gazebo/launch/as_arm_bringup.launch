@@ -1,0 +1,17 @@
+<launch>
+    <param name="publish_rate" type="int" value="10"/>
+
+    <!-- Launch Gazebo  -->
+    <include file="$(find as_arm_gazebo)/launch/as_arm_world.launch"/>
+
+    <!-- ros_control as arm launch file -->
+    <include file="$(find as_arm_gazebo)/launch/as_arm_gazebo_states.launch"/>
+
+    <!-- ros_control position control dof arm launch file -->
+    <!--<include file="$(find as_arm_gazebo)/launch/as_arm_gazebo_position.launch" />  -->
+
+    <!-- ros_control trajectory control dof arm launch file -->
+    <include file="$(find as_arm_gazebo)/launch/as_arm_trajectory_controller.launch"/>
+
+
+</launch>
