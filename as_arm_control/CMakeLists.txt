@@ -7,6 +7,10 @@ project(as_arm_control)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
+  moveit_core
+  moveit_ros_perception
+  moveit_ros_planning_interface
+  pluginlib
   std_msgs
 )
 
@@ -114,7 +118,7 @@ catkin_package(
 ## Your package locations should be listed before other locations
 # include_directories(include)
 include_directories(
-  ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS} /home/yj/pycharm/ros/catkin_ws/devel/include/
 )
 
 ## Declare a C++ library
@@ -127,17 +131,30 @@ include_directories(
 ## either from message generation or dynamic reconfigure
 # add_dependencies(as_arm_control ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
+
 ## Declare a C++ executable
-# add_executable(as_arm_control_node src/as_arm_control_node.cpp)
+add_executable(check_collision src/check_collision.cpp)
+
+## Add cmake target dependencies of the executable
+## same as for the library above
+# add_dependencies(check_collision ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+
+## Specify libraries to link a library or executable target against
+target_link_libraries(check_collision
+   ${catkin_LIBRARIES}
+)
+
+## Declare a C++ executable
+add_executable(test_check_collision src/test_check_collision.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 # add_dependencies(as_arm_control_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(as_arm_control_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(test_check_collision
+   ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##

@@ -34,14 +34,21 @@
         <transmission name="tran1">
             <type>transmission_interface/SimpleTransmission</type>
             <joint name="${joint_name}">
-                <hardwareInterface>PositionJointInterface</hardwareInterface>
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
             </joint>
             <actuator name="motor1">
-                <hardwareInterface>PositionJointInterface</hardwareInterface>
+                <hardwareInterface>EffortJointInterface</hardwareInterface>
                 <mechanicalReduction>1</mechanicalReduction>
             </actuator>
         </transmission>
     </xacro:macro>
+
+    <link name="world"/>
+    <joint name="world_joint" type="fixed">
+        <origin xyz="0 0 0.04" rpy="0 0 0"/>
+        <parent link="world"/>
+        <child link="base_link"/>
+    </joint>
 
     <!-- ////  bottom link -> base link  ////-->
     <link name="bottom_link">
@@ -291,7 +298,7 @@
         <child link="gripper_finger_link1"/>
         <origin xyz="0 0 0.002"/>
         <axis xyz="0 1 0"/>
-        <limit effort="100" lower="-0.015" upper="0" velocity="1.0"/>
+        <limit effort="200" lower="-0.015" upper="0" velocity="1.0"/>
         <dynamics damping="50" friction="1"/>
     </joint>
     <link name="gripper_finger_link1">
@@ -302,7 +309,7 @@
             </geometry>
             <material name="Black"/>
         </visual>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="0.2"/>
     </link>
 
     <gazebo reference="l_gripper_aft_link">
@@ -316,7 +323,7 @@
         <child link="gripper_finger_link2"/>
         <origin xyz="0 0 0.002"/>
         <axis xyz="0 1 0"/>
-        <limit effort="100" lower="0" upper="0.015" velocity="1.0"/>
+        <limit effort="200" lower="0" upper="0.015" velocity="1.0"/>
         <dynamics damping="50" friction="1"/>
     </joint>
     <link name="gripper_finger_link2">
@@ -327,7 +334,7 @@
             </geometry>
             <material name="Black"/>
         </visual>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="0.2"/>
     </link>
 
     <gazebo reference="r_gripper_aft_link">
@@ -356,6 +363,7 @@
         <parent link="gripper_link"/>
         <child link="grasp_frame_link"/>
         <origin xyz="0 0 0.065" rpy="0 0 0"/>
+        <!--limit effort="300" velocity="1" lower="0" upper="0"/-->
     </joint>
 
     <!-- transmission block -->

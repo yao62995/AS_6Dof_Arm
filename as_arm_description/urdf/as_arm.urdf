@@ -20,6 +20,12 @@
   <!-- Constants -->
   <!-- equal to PI/180-->
   <!-- Define materials mass -->
+  <link name="world"/>
+  <joint name="world_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.04"/>
+    <parent link="world"/>
+    <child link="base_link"/>
+  </joint>
   <!-- ////  bottom link -> base link  ////-->
   <link name="bottom_link">
     <visual>
@@ -205,7 +211,7 @@
       <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz=" 0 0 0.43"/>
+      <origin rpy="0 0 0" xyz=" 0 0 0.205"/>
       <geometry>
         <box size="0.01 0.01 0.45"/>
       </geometry>
@@ -279,8 +285,8 @@
         <!-- 50-degree FOV  = 0.873-->
         <horizontal_fov>1.3962634</horizontal_fov>
         <image>
-          <width>1920</width>
-          <height>1024</height>
+          <width>640</width>
+          <height>480</height>
           <format>R8G8B8</format>
         </image>
         <clip>
@@ -546,6 +552,7 @@
     <parent link="gripper_link"/>
     <child link="grasp_frame_link"/>
     <origin rpy="0 0 0" xyz="0 0 0.065"/>
+    <!--limit effort="300" velocity="1" lower="0" upper="0"/-->
   </joint>
   <!-- transmission block -->
   <transmission name="tran1">

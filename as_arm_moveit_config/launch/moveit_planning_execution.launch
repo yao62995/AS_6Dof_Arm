@@ -9,4 +9,6 @@
     <include file="$(find as_arm_moveit_config)/launch/moveit_rviz.launch">
         <arg name="config" value="true"/>
     </include>
+
+    <node name="check_collision" pkg="as_arm_control" type="check_collision" output="screen"/>
 </launch>

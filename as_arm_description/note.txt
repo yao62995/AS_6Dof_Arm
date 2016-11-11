@@ -36,6 +36,18 @@ rosrun image_view image_view image:=/camera/image_raw
 查看话题列表：
 rostopic list
 
+控制某个joint移动角度：
+rostopic pub -1 /rrbot/joint1_position_controller/command std_msgs/Float64 "data: 1.5"
+
+获取cube位置
+rostopic echo -n 1 /gazebo/cubes
+
+获取joint位置：
+rostopic echo -n 1 /as_arm/joint_states
+
+获取某个link(如end effector)的世界坐标
+rosrun tf tf_echo /world /grasp_frame_link
+
 =============== moveit.rviz =============
 line: 648
     - Arrow Length: 0.1

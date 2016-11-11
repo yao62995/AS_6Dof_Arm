@@ -278,13 +278,15 @@ def test_move_planer():
     print "============ Printing robot state"
     print robot.get_current_state()
     switch = True
+    joint = group.get_random_joint_values()
     while True:
         print "============ Generating plan 1"
         # ========== random target pos =================
         # group.set_random_target()
         # plan_msg = group.plan()
         # group.execute(plan_msg=plan_msg, wait=True)
-        # rospy.sleep(3)
+        group.go(joints=joint, wait=True)
+
 
         # =============== specify target config ==============
         # up_right_joint_values = {"base_joint": 0, "shoulder_joint": 0, "elbow_joint": 0,
@@ -299,7 +301,7 @@ def test_move_planer():
         #     plan_msg = group.plan(joints=up_right_joint_values)
         # switch = not switch
         # group.execute(plan_msg=plan_msg, wait=True)
-        # rospy.sleep(3)
+        rospy.sleep(3)
 
         # ============ specify target positions and orientations ==================
         """
@@ -321,25 +323,25 @@ pose:
     w: 0.321175902385
 
         """
-        end_effector = group.get_end_effector_link()
+        # end_effector = group.get_end_effector_link()
+        # # pose_target = geometry_msgs.msg.Pose()
+        # # pose_target.orientation.w = 0.321175902385
+        # # pose_target.orientation.x = 0.125357993591
+        # # pose_target.orientation.y = 0.62901329758
+        # # pose_target.orientation.z = -0.696759416612
+        # # pose_target.position.x = 0.0704592248086
+        # # pose_target.position.y = -0.259683593557
+        # # pose_target.position.z = 0.0291556146529
+        # print
         # pose_target = geometry_msgs.msg.Pose()
-        # pose_target.orientation.w = 0.321175902385
-        # pose_target.orientation.x = 0.125357993591
-        # pose_target.orientation.y = 0.62901329758
-        # pose_target.orientation.z = -0.696759416612
-        # pose_target.position.x = 0.0704592248086
-        # pose_target.position.y = -0.259683593557
-        # pose_target.position.z = 0.0291556146529
-        print
-        pose_target = geometry_msgs.msg.Pose()
-        pose_target.pose.position.x = -0.2
-        pose_target.pose.position.y = 0
-        pose_target.pose.position.z = 0.1
-        group.set_pose_target(pose_target)
-        # group.set_pose_target(group.get_random_pose())
-        plan_msg = group.plan()
-        group.execute(plan_msg=plan_msg, wait=True)
-        is_exit = True
+        # pose_target.pose.position.x = -0.2
+        # pose_target.pose.position.y = 0
+        # pose_target.pose.position.z = 0.1
+        # group.set_pose_target(pose_target)
+        # # group.set_pose_target(group.get_random_pose())
+        # plan_msg = group.plan()
+        # group.execute(plan_msg=plan_msg, wait=True)
+        # is_exit = True
 
         if is_exit:
             break

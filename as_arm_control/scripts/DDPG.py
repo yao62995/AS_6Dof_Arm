@@ -14,13 +14,13 @@ class DDPG(Base):
             paper "continuous control with deep reinforcement learning"
     """
 
-    def __init__(self, states_dim, actions_dim, train_dir="./ddpg_models", gpu_id=0,
-                 observe=1e3, replay_memory=5e4, update_frequency=1, train_repeat=1, gamma=0.99, tau=0.001,
-                 batch_size=64, learn_rate=1e-3, dim=256):
+    def __init__(self, states_dim, actions_dim, train_dir="./ddpg_models",
+                 observe=1e3, replay_memory=1e4, update_frequency=1, train_repeat=1, gamma=0.99, tau=0.001,
+                 batch_size=32, learn_rate=1e-3, dim=256):
         Base.__init__(self)
         self.states_dim = states_dim
         self.actions_dim = actions_dim
-        self.gpu_id = gpu_id
+        self.image_size = (160, 120)
         # init train params
         self.observe = observe
         self.update_frequency = update_frequency
@@ -56,7 +56,7 @@ class DDPG(Base):
     def get_variables(self, scope, shape, wd=0.01, val_range=None, collect="losses"):
         with tf.variable_scope(scope):
             if val_range is None:
-                val_range = (-1 / np.sqrt(shape[0]), 1 / np.sqrt(shape[0]))
+                val_range = (-10 / np.sqrt(shape[0]), 10 / np.sqrt(shape[0]))
             weights = tf.Variable(tf.random_uniform(shape, val_range[0], val_range[1]), name='weights')
             biases = tf.Variable(tf.random_uniform([shape[-1]], val_range[0], val_range[1]), name='biases')
             if wd is not None:
@@ -66,10 +66,15 @@ class DDPG(Base):
 
     def actor_variables(self, scope, wd=0.01, dim=512):
         with tf.variable_scope(scope):
+            # joint part
             w1, b1 = self.get_variables("fc1", (self.states_dim, dim), wd=wd, collect=scope)
             w2, b2 = self.get_variables("fc2", (dim, dim), wd=wd, collect=scope)
-            w3, b3 = self.get_variables("fc3", (dim, self.actions_dim), wd=wd, val_range=(-3e-4, 3e-4), collect=scope)
-            return [w1, b1, w2, b2, w3, b3]
+            # view part
+            vw1, vb1 = self.get_variables("v1", shape=[8, 8, 1, 32])
+            vw2, vb2 = self.get_variables("v2", shape=[4, 4, 32, 16])
+            # concat
+            w3, b3 = self.get_variables("fc3", (1536, self.actions_dim), wd=wd, val_range=(-3e-4, 3e-4), collect=scope)
+            return [w1, b1, w2, b2, vw1, vb1, vw2, vb2, w3, b3]
 
     def critic_variables(self, scope, wd=0.01, dim=512):
         with tf.variable_scope(scope):
@@ -79,22 +84,28 @@ class DDPG(Base):
             w4, b4 = self.get_variables("fc4", (dim, 1), wd=wd, val_range=(-3e-4, 3e-4), collect=scope)
             return [w1, b1, w2, b2, w3, b3, w4, b4]
 
-    def actor_network(self, op_scope, state, theta):
-        weight = [theta[idx] for idx in xrange(0, len(theta), 2)]
-        bias = [theta[idx] for idx in xrange(1, len(theta), 2)]
-        with tf.variable_op_scope([state], op_scope, "actor") as scope:
-            flat1 = tf.reshape(state, shape=(-1, self.states_dim), name="flat1")
-            fc1 = tf.nn.relu(tf.matmul(flat1, weight[0]) + bias[0])
-            # fc1 = NetTools.batch_normalized(fc1)
-            fc2 = tf.nn.relu(tf.matmul(fc1, weight[1]) + bias[1])
-            # fc2 = NetTools.batch_normalized(fc2)
-            logits = tf.matmul(fc2, weight[2]) + bias[2]
+    def actor_network(self, op_scope, joint_state, view_state, theta):
+        w1, b1, w2, b2, vw1, vb1, vw2, vb2, w3, b3 = theta
+        with tf.variable_scope(op_scope, "actor", [joint_state, view_state]) as scope:
+            # joint part
+            fc1 = tf.nn.relu(tf.matmul(joint_state, w1) + b1)
+            fc2 = tf.nn.relu(tf.matmul(fc1, w2) + b2)
+            # view part,
+            # (160, 120, 1) => (40, 30, 32)
+            conv1 = tf.nn.relu(tf.nn.bias_add(tf.nn.conv2d(view_state, vw1, strides=[1, 4, 4, 1], padding="SAME"), vb1))
+            pool1 = max_pool(conv1)  # (40, 30, 32) => (20, 15, 32)
+            # (20, 15, 32) => (10, 8, 16)
+            conv2 = tf.nn.relu(tf.nn.bias_add(tf.nn.conv2d(pool1, vw2, strides=[1, 2, 2, 1], padding="SAME"), vb2))
+            flat1 = tf.reshape(conv2, [-1, 1280])
+            # concat
+            concat1 = tf.concat(1, [fc2, flat1], name="concat_state")
+            logits = tf.matmul(concat1, w3) + b3
             return logits
 
     def critic_network(self, op_scope, state, action, theta):
         weight = [theta[idx] for idx in xrange(0, len(theta), 2)]
         bias = [theta[idx] for idx in xrange(1, len(theta), 2)]
-        with tf.variable_op_scope([state, action], op_scope, "critic") as scope:
+        with tf.variable_scope(op_scope, "critic", [state, action]) as scope:
             # reshape
             flat1 = tf.reshape(state, (-1, self.states_dim), name="flat1")
             fc1 = tf.nn.relu(tf.matmul(flat1, weight[0]) + bias[0])
@@ -106,7 +117,7 @@ class DDPG(Base):
             return logits
 
     def build_graph(self, dim=256):
-        with tf.Graph().as_default(), tf.device('/gpu:%d' % self.gpu_id):
+        with tf.Graph().as_default(), tf.device('/cpu:0'):
             self.global_step = tf.get_variable('global_step', [],
                                                initializer=tf.constant_initializer(0), trainable=False)
             # init variables
@@ -115,9 +126,10 @@ class DDPG(Base):
             theta_pt, update_pt = self.target_exponential_moving_average(theta_p)
             theta_qt, update_qt = self.target_exponential_moving_average(theta_q)
             # actor network
-            state = tf.placeholder(tf.float32, shape=(None, self.states_dim))
-            act_logit = self.actor_network("actor", state, theta_p)
-            cri_logit = self.critic_network("critic", state, act_logit, theta_q)
+            joint_state = tf.placeholder(tf.float32, shape=(None, self.states_dim))
+            view_state = tf.placeholder(tf.float32, shape=(None, 160, 120, 1))
+            act_logit = self.actor_network("actor", joint_state, view_state, theta_p)
+            cri_logit = self.critic_network("critic", joint_state, act_logit, theta_q)
             # actor optimizer
             l2_loss = tf.add_n(tf.get_collection("actor"))
             p_loss = -tf.reduce_mean(cri_logit) + l2_loss
@@ -130,11 +142,12 @@ class DDPG(Base):
             # train critic network
             q_target = tf.placeholder(tf.float32, shape=(None), name="critic_target")
             act_train = tf.placeholder(tf.float32, shape=(None, self.actions_dim), name="act_train")
-            cri_train = self.critic_network("train_critic", state, act_train, theta_q)
+            cri_train = self.critic_network("train_critic", joint_state, act_train, theta_q)
             # target network
-            state2 = tf.placeholder(tf.float32, shape=(None, self.states_dim))
-            act_logit2 = self.actor_network("target_actor", state2, theta_pt)
-            cri_logit2 = self.critic_network("target_critic", state2, act_logit2, theta_qt)
+            joint_state2 = tf.placeholder(tf.float32, shape=(None, self.states_dim))
+            view_state2 = tf.placeholder(tf.float32, shape=(None, 160, 120, 1))
+            act_logit2 = self.actor_network("target_actor", joint_state2, view_state2, theta_pt)
+            cri_logit2 = self.critic_network("target_critic", joint_state2, act_logit2, theta_qt)
             # train critic optimizer
             l2_loss = tf.add_n(tf.get_collection("critic"))
             q_loss = tf.reduce_mean(tf.square(cri_train - q_target)) + l2_loss
@@ -153,14 +166,19 @@ class DDPG(Base):
             self.sess.run(tf.initialize_all_variables())
         # restore model
         restore_model(self.sess, self.train_dir, self.saver)
-        self.ops["act_logit"] = lambda obs: self.sess.run([act_logit], feed_dict={state: obs})
-        self.ops["cri_logit2"] = lambda obs: self.sess.run([cri_logit2], feed_dict={state2: obs})
-        self.ops["train_p"] = lambda obs: self.sess.run([train_p, p_loss], feed_dict={state: obs})
-        self.ops["train_q"] = lambda obs, act, q_t: self.sess.run([train_q, self.global_step, q_loss],
-                                                                  feed_dict={state: obs, act_train: act, q_target: q_t})
+        self.ops["act_logit"] = lambda joint_obs, view_obs: \
+            self.sess.run(act_logit, feed_dict={joint_state: joint_obs, view_state: view_obs})
+        self.ops["cri_logit2"] = lambda joint_obs, view_obs: \
+            self.sess.run(cri_logit2, feed_dict={joint_state2: joint_obs, view_state2: view_obs})
+        self.ops["train_p"] = lambda joint_obs, view_obs: \
+            self.sess.run([train_p, p_loss], feed_dict={joint_state: joint_obs, view_state: view_obs})
+        self.ops["train_q"] = lambda joint_obs, act, q_t: \
+            self.sess.run([train_q, self.global_step, q_loss], feed_dict={joint_state: joint_obs, act_train: act,
+                                                                          q_target: q_t})
 
     def get_action(self, state, with_noise=False):
-        action = self.ops["act_logit"]([state])[0][0]
+        joint_state, view_state = state
+        action = self.ops["act_logit"]([joint_state], [view_state])[0]
         if with_noise:
             action = action + self.explore_noise.noise()
         return action
@@ -174,28 +192,27 @@ class DDPG(Base):
             for _ in xrange(self.train_repeat):
                 # train mini-batch from replay memory
                 mini_batch = random.sample(self.replay_memory, self.batch_size)
-                batch_state, batch_action = [], []
+                batch_joint_state, batch_view_state, batch_action = [], [], []
                 batch_target_q = []
                 for batch_i, sample in enumerate(mini_batch):
                     b_state, b_action, b_reward, b_terminal, b_state_n = sample
+                    joint_state, view_state = b_state
+                    joint_state_n, view_state_n = b_state_n
                     if b_terminal:
                         target_q = b_reward
                     else:  # compute target q values
-                        target_q = b_reward + self.gamma * self.ops["cri_logit2"]([b_state_n])[0][0]
-                    batch_state.append(b_state)
+                        target_q = b_reward + self.gamma * \
+                                              self.ops["cri_logit2"]([joint_state_n], [view_state_n])[0]
+                    batch_joint_state.append(joint_state)
+                    batch_view_state.append(view_state)
                     batch_action.append(b_action)
                     batch_target_q.append(target_q)
                 # update actor network (theta_p)
-                _, p_loss = self.ops["train_p"](batch_state)
+                _, p_loss = self.ops["train_p"](batch_joint_state, batch_view_state)
                 # update critic network (theta_q)
-                _, global_step, q_loss = self.ops["train_q"](batch_state, batch_action, batch_target_q)
+                _, global_step, q_loss = self.ops["train_q"](batch_joint_state, batch_action, batch_target_q)
                 if self.time_step % 1e3 == 0:
                     # logger.info("step=%d, p_loss=%.6f, q_loss=%.6f" % (global_step, p_loss, q_loss))
                     logger.info("step=%d, q_loss=%.6f" % (global_step, q_loss))
         if self.time_step % 3e4 == 0:
             save_model(self.sess, self.train_dir, self.saver, "ddpg-", global_step=self.global_step)
-
-
-if __name__ == "__main__":
-    model = DDPG()
-    # model.observe()

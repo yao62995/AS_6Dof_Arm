@@ -35,6 +35,8 @@
     </group_state>
     <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
     <end_effector name="robot_eef" parent_link="grasp_frame_link" group="gripper" parent_group="arm" />
+    <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
+    <virtual_joint name="word_link" type="fixed" parent_frame="world" child_link="base_link" />
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link" link2="bottom_link" reason="Adjacent" />
     <disable_collisions link1="base_link" link2="camera_link" reason="Never" />
@@ -79,14 +81,12 @@
     <disable_collisions link1="camera_link" link2="wrist_flex_link" reason="Never" />
     <disable_collisions link1="camera_link" link2="wrist_rot_link" reason="Never" />
     <disable_collisions link1="camera_mast_link" link2="camera_mast_link_2" reason="Adjacent" />
-    <disable_collisions link1="camera_mast_link" link2="elbow_link" reason="Never" />
     <disable_collisions link1="camera_mast_link" link2="shoulder_link" reason="Never" />
     <disable_collisions link1="camera_mast_link" link2="sink_bottom_link" reason="Never" />
     <disable_collisions link1="camera_mast_link" link2="sink_wall_down" reason="Never" />
     <disable_collisions link1="camera_mast_link" link2="sink_wall_left" reason="Never" />
     <disable_collisions link1="camera_mast_link" link2="sink_wall_right" reason="Never" />
     <disable_collisions link1="camera_mast_link" link2="sink_wall_up" reason="Never" />
-    <disable_collisions link1="camera_mast_link" link2="wrist_flex_link" reason="Never" />
     <disable_collisions link1="camera_mast_link_2" link2="elbow_link" reason="Never" />
     <disable_collisions link1="camera_mast_link_2" link2="gripper_bottom_link" reason="Never" />
     <disable_collisions link1="camera_mast_link_2" link2="gripper_finger_link1" reason="Never" />

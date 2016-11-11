@@ -53,8 +53,7 @@ def init_position(group, pub):
     joint_bias = [0] * 6
     for _, v in joint_map.items():
         joint_bias[v["i"]] = v['bias']
-    joint_status.mode = 0
-    joint_status.angles = joint_bias
+    joint_status.data = joint_bias
     pub.publish(joint_status)
     rospy.sleep(5)
 

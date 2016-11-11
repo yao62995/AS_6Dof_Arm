@@ -2,27 +2,42 @@
 # -*- coding: utf-8 -*-
 # author: yao_62995@163.com
 
+import sys
 import cv2
 import numpy as np
 
 import rospy
+import tf
 from gazebo_msgs.msg import LinkStates, LinkState
+from gazebo_msgs.srv import GetLinkState
 from geometry_msgs.msg import Pose, Quaternion
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from sensor_msgs.msg import CompressedImage, JointState
+from as_arm_description.srv import CheckCollisionValid
 
 DEG_TO_RAD = 0.0174533  # PI/180
 
 
 class ArmJointManager(object):
-    ArmJointNames = ['base_joint', 'elbow_joint', 'shoulder_joint', 'wrist_flex_joint', 'wrist_rot_joint',
+    ArmJointNames = ['base_joint', 'shoulder_joint', 'elbow_joint', 'wrist_flex_joint', 'wrist_rot_joint',
                      'finger_joint1', 'finger_joint2']
+    MaxGripperJointValue = 0.015
 
-    def __init__(self, arm_group, gripper_group):
-        self.arm_group = arm_group
-        self.gripper_group = gripper_group
+    def __init__(self):
+        # init moveit commander
+        # moveit_commander.roscpp_initialize(sys.argv)
+        # init robot model
+        # robot = moveit_commander.RobotCommander()
+        # init move group
+        # self.arm_group = moveit_commander.MoveGroupCommander("arm")
+
+        self.joint_state = JointState()
         self.arm_map = dict()
+        self.joint_pub = rospy.Publisher("/as_arm/set_joints_states", JointState, queue_size=1)
         self.pose_sub = rospy.Subscriber("/as_arm/joint_states", JointState, callback=self.callback_joint, queue_size=1)
+        # end effector service
+        self.check_collision_client = rospy.ServiceProxy('/check_collision', CheckCollisionValid)
+        self.tf_listener = tf.TransformListener()
 
     def callback_joint(self, data):
         if len(self.arm_map) == 0:
@@ -31,14 +46,22 @@ class ArmJointManager(object):
         for _, v in self.arm_map.items():
             v[1] = data.position[v[0]]
 
-    def move_joints(self, group, names, values):
+    def move_joints(self, names, values):
         """
-        :param group: moveit plan group
         :param names: a list of joint names (type of string)
         :param values: a list of joint angles (type of int)
         """
-        joint_map = dict((name, values[idx]) for idx, name in enumerate(names))
-        group.go(joints=joint_map, wait=True)
+        self.joint_state.name = names
+        self.joint_state.position = values
+        # print "move joints:", values
+        self.joint_pub.publish(self.joint_state)
+
+    def move_arm_joints(self, names, values):
+        self.move_joints(names, values)
+
+    def move_gripper_joints(self, value):
+        values = [-abs(value), abs(value)]
+        self.move_joints(self.ArmJointNames[5:], values)
 
     def read_joints(self, names):
         """
@@ -47,23 +70,16 @@ class ArmJointManager(object):
         """
         return [self.arm_map[name][1] for name in names]
 
-    def move_arm_joints(self, names, values):
-        values = [val * DEG_TO_RAD for val in values]
-        return self.move_joints(self.arm_group, names, values)
-
-    def move_gripper_joints(self, value):
-        values = [-abs(value), abs(value)]
-        self.move_joints(self.gripper_group, self.ArmJointNames[5:], values)
-
     def open_gripper(self):
         values = [-self.MaxGripperJointValue, self.MaxGripperJointValue]
-        return self.move_joints(self.gripper_group, self.ArmJointNames[5:], values)
+        return self.move_joints(self.ArmJointNames[5:], values)
 
     def close_gripper(self):
-        return self.move_joints(self.gripper_group, self.ArmJointNames[5:], [0] * 2)
+        return self.move_joints(self.ArmJointNames[5:], [0] * 2)
 
     def read_arm_joints(self, names):
-        return map(lambda x: int(x / DEG_TO_RAD), self.read_joints(names))
+        # return map(lambda x: int(x / DEG_TO_RAD), self.read_joints(names))
+        return self.read_joints(names)
 
     def read_gripper_joints(self):
         return self.read_joints(self.ArmJointNames[5:])
@@ -72,11 +88,20 @@ class ArmJointManager(object):
         """
         :return: a list of pose, format: [x, y, z, rot_x, rot_y, rot_z]
         """
-        ret = [0] * 6
-        p = self.arm_group.get_current_pose(end_effector_link="grasp_frame_link").pose
-        ret[0], ret[1], ret[2] = p.position.x, p.position.y, p.position.z
-        ret[3: 6] = euler_from_quaternion(p.orientation)
+        (trans, rot) = self.tf_listener.lookupTransform("/world", "/grasp_frame_link", rospy.Time(0))
+        ret = list(trans)
+        ret += list(euler_from_quaternion(list(rot)))
         return ret
+
+    def check_collision(self, joint_values):
+        """
+        :param joint_values: a list of joint values
+        :return: true if collision
+        """
+        if len(joint_values) == 6:
+            joint_values = joint_values + [-joint_values[5]]
+        return self.check_collision_client(joint_values).valid
+
 
 
 class CubesManager(object):
@@ -89,11 +114,17 @@ class CubesManager(object):
         # pos publisher
         self.pose_pub = rospy.Publisher("/gazebo/set_link_state", LinkState, queue_size=1)
         self.pose_sub = rospy.Subscriber("/gazebo/cubes", LinkStates, callback=self.callback_state, queue_size=1)
+        # set base_link to (0,0,0)
 
     def callback_state(self, data):
-        self.cubes_state = dict((link, data.pose[idx]) for idx, link in enumerate(data.name))
+        for idx, link in enumerate(data.name):
+            self.cubes_state.setdefault(link, [0] * 3)
+            pose = self.cubes_state[link]
+            pose[0] = data.pose[idx].position.x - 0.18
+            pose[1] = data.pose[idx].position.y
+            pose[2] = data.pose[idx].position.z + 0.05
 
-    def get_cube_pose(self, name=None):
+    def read_cube_pose(self, name=None):
         if name is not None:
             return self.cubes_state[name]
         else:
@@ -106,11 +137,11 @@ class CubesManager(object):
         :param orient: cube orientation, a list of three float, [ix, iy, iz]
         :return:
         """
-        self.cubes_pose.link_name = name
+        self.cubes_pose.link_name = "cubes::" + name
         p = self.cubes_pose.pose
-        p.position.x = pose[0]
+        p.position.x = pose[0] + 0.18
         p.position.y = pose[1]
-        p.position.z = pose[2]
+        p.position.z = pose[2] - 0.05
         if orient is None:
             orient = [0, 0, 0]
         q = quaternion_from_euler(orient[0], orient[1], orient[2])
@@ -130,8 +161,9 @@ class CameraListener(object):
         # format: rgb8; jpeg compressed bgr8
         np_img = np.fromstring(data.data, dtype=np.uint8)
         img = cv2.imdecode(np_img, cv2.CV_LOAD_IMAGE_COLOR)
-        self.image = cv2.cvtColor(cv2.resize(img, (self.width, self.height)), cv2.COLOR_BGR2GRAY)
-        cv2.imwrite("/home/yj/ss.jpg", self.image)
+        img = cv2.cvtColor(cv2.resize(img, (self.width, self.height)), cv2.COLOR_BGR2GRAY)
+        # cv2.imwrite("/home/yj/ss.jpg", self.image)
+        self.image = np.reshape(img, newshape=(self.width, self.height, 1)) / 256.0
 
     def get_image(self):
         return self.image

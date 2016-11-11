@@ -1,6 +1,6 @@
 <launch>
     <!-- Load joint controller configurations from YAML file to parameter server -->
-    <rosparam file="$(find as_arm_gazebo)/config/as_arm_gazebo_joint_states.yaml" command="load"/>
+    <rosparam file="$(find as_arm_gazebo)/config/as_arm_joint_states.yaml" command="load"/>
 
 
     <node name="joint_controller_spawner" pkg="controller_manager" type="spawner" respawn="false"
@@ -12,8 +12,11 @@
         <remap from="/joint_states" to="/as_arm/joint_states"/>
     </node>
 
-    <!-- get cube link pose -->
+    <!-- cube pose -->
     <node name="cube_link_pose" pkg="as_arm_gazebo" type="cube_link_pose.py" output="screen"/>
+
+    <node name="arm_image_view" pkg="image_view" type="image_view" respawn="false"
+          output="screen" args="image:=/camera/image_raw"/>
 
     <!--node name="cube_create_service" pkg="as_arm_gazebo" type="cube_create_service"/>
     <node name="cube_get_position_service" pkg="as_arm_gazebo" type="cube_get_position_service"/>

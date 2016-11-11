@@ -9,10 +9,10 @@
     <include file="$(find as_arm_gazebo)/launch/as_arm_gazebo_states.launch"/>
 
     <!-- ros_control position control dof arm launch file -->
-    <!--<include file="$(find as_arm_gazebo)/launch/as_arm_gazebo_position.launch" />  -->
+    <include file="$(find as_arm_gazebo)/launch/as_arm_gazebo_position.launch" />
 
     <!-- ros_control trajectory control dof arm launch file -->
-    <include file="$(find as_arm_gazebo)/launch/as_arm_trajectory_controller.launch"/>
+    <!--include file="$(find as_arm_gazebo)/launch/as_arm_trajectory_controller.launch"/-->
 
     <!-- moveit launch file -->
     <include file="$(find as_arm_moveit_config)/launch/moveit_planning_execution.launch"/>
