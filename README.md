@@ -1,9 +1,9 @@
 
 #### Gazebo 展示
-![Gazebo](as_arm/as_arm_description/img/gazebo.png)  
+![Gazebo](as_arm_description/img/gazebo.png)  
 
 #### Real环境展示
-![Real Environment](as_arm/as_arm_description/img/real.png)  
+![Real Environment](as_arm_description/img/real.png)  
 
 ## URDF描述文件
 * 机械臂相关描述文件位于 _as_arm_description/urdf_ 目录中
