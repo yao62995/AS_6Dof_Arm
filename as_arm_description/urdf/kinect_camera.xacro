@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <property name="MAST_HEIGHT" value="0.45"/>
+  <joint name="camera_mast_joint" type="fixed">
+    <origin xyz="0 0.1 0" rpy="0 0 0"/>
+    <parent link="bottom_link"/>
+    <child link="camera_mast_link"/>
+  </joint>
+  <link name="camera_mast_link">
+    <visual>
+      <origin xyz="0 0 ${MAST_HEIGHT/2-0.02}" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 ${MAST_HEIGHT}"/>
+      </geometry>
+      <material name="Gray"/>
+    </visual>
+    <collision>
+      <origin xyz=" 0 0 ${MAST_HEIGHT-0.02}" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 ${MAST_HEIGHT}"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="camera_mast_joint_2" type="fixed">
+    <origin xyz="0 0 ${MAST_HEIGHT-0.1}" rpy="0 0 0"/>
+    <parent link="camera_mast_link"/>
+    <child link="camera_mast_link_2"/>
+  </joint>
+  <link name="camera_mast_link_2">
+    <visual>
+      <origin xyz="-0.07 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.15 0.01 0.01"/>
+      </geometry>
+      <material name="Gray"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.07 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.15 0.01 0.01"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <origin xyz="-0.14 0 -0.005" rpy="0 ${90*deg_to_rad} 0"/>
+    <parent link="camera_mast_link_2"/>
+    <child link="camera_link"/>
+  </joint>
+  <!-- Camera -->
+  <link name="camera_link">
+    <collision>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin xyz="0 0 -0.005" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="Red"/>
+    </visual>
+    <inertial>
+      <mass value="1e-5"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <!--joint name="camera_optical_joint" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <parent link="camera_link"/>
+        <child link="camera_optical_link"/>
+    </joint>
+
+    <link name="camera_optical_link">
+        <inertial>
+            <mass value="1e-5"/>
+            <origin xyz="0 0 0" rpy="${90*deg_to_rad} ${90*deg_to_rad} ${90*deg_to_rad}"/>
+            <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+        </inertial>
+    </link-->
+  <!-- camera -->
+  <gazebo reference="camera_link">
+    <material>Gazebo/Red</material>
+    <sensor name="camera_0" type="depth">
+      <camera name="head">
+        <horizontal_fov>1.5</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>.02</near>
+          <far>20</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+        <save enabled="true" path="/tmp/camera"/>
+      </camera>
+      <plugin name="kinect_camera" filename="libgazebo_ros_openni_kinect.so">
+        <cameraName>camera</cameraName>
+        <alwaysOn>true</alwaysOn>
+        <updateRate>30</updateRate>
+        <imageTopicName>image_raw</imageTopicName>
+        <depthImageTopicName>depth/image_raw</depthImageTopicName>
+        <pointCloudTopicName>depth/points</pointCloudTopicName>
+        <cameraInfoTopicName>rgb/camera_info</cameraInfoTopicName>
+        <depthImageCameraInfoTopicName>depth/camera_info</depthImageCameraInfoTopicName>
+        <frameName>camera_link</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+      <always_on>true</always_on>
+      <update_rate>30.0</update_rate>
+    </sensor>
+  </gazebo>
+</robot>
