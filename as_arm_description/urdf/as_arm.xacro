@@ -16,6 +16,7 @@
 
     <!-- Constants -->
     <property name="deg_to_rad" value="0.01745329251994329577"/>  <!-- equal to PI/180-->
+    <property name="MATTER_MASS" value="0.1"/>
     <property name="M_SCALE" value="0.001 0.001 0.001"/>
     <property name="M_PI" value="3.14159"/>
     <property name="SINK_WIDTH" value="0.2"/>
@@ -94,7 +95,7 @@
                 <cylinder radius="0.05" length="0.04"/>
             </geometry>
         </collision>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="base_link">
@@ -127,7 +128,7 @@
                 <cylinder radius="0.04" length="0.002"/>
             </geometry>
         </collision>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="shoulder_link">
@@ -159,7 +160,7 @@
                 <box size="0.015 0.04 0.1"/>
             </geometry>
         </collision>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="elbow_link">
@@ -191,7 +192,7 @@
                 <box size="0.015 0.035 0.1"/>
             </geometry>
         </collision>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="wrist_flex_link">
@@ -223,7 +224,7 @@
                 <box size="0.025 0.025 0.025"/>
             </geometry>
         </collision>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="wrist_rot_link">
@@ -257,7 +258,7 @@
                 <box size="0.003 0.01 0.01"/>
             </geometry>
         </collision>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="gripper_bottom_link">
@@ -285,7 +286,7 @@
                 <box size="0.01 0.035 0.004"/>
             </geometry>
         </collision>
-        <xacro:inertial_matrix mass="1"/>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="gripper_link">
@@ -309,7 +310,13 @@
             </geometry>
             <material name="Black"/>
         </visual>
-        <xacro:inertial_matrix mass="0.2"/>
+        <collision>
+            <origin xyz="0 0.016 0.03"/>
+            <geometry>
+                <box size="0.01 0.002 0.06"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="l_gripper_aft_link">
@@ -334,7 +341,13 @@
             </geometry>
             <material name="Black"/>
         </visual>
-        <xacro:inertial_matrix mass="0.2"/>
+        <collision>
+            <origin xyz="0 -0.016 0.03"/>
+            <geometry>
+                <box size="0.01 0.002 0.06"/>
+            </geometry>
+        </collision>
+        <xacro:inertial_matrix mass="${MATTER_MASS}"/>
     </link>
 
     <gazebo reference="r_gripper_aft_link">
@@ -348,7 +361,7 @@
             <origin xyz="0 0 0" rpy="0 0 0"/>
             <mass value="0.0001"/>
             <cuboid_inertia mass="0.0001" x="0.001" y="0.001" z="0.001"/>
-            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="100.0" iyz="0.0" izz="1.0"/>
+            <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="10.0" iyz="0.0" izz="1.0"/>
         </inertial>
         <!--visual>
             <origin xyz="0 0 0"/>

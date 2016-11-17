@@ -12,15 +12,8 @@
         <remap from="/joint_states" to="/as_arm/joint_states"/>
     </node>
 
-    <!-- cube pose -->
-    <node name="cube_link_pose" pkg="as_arm_gazebo" type="cube_link_pose.py" output="screen"/>
-
     <node name="arm_image_view" pkg="image_view" type="image_view" respawn="false"
           output="screen" args="image:=/camera/image_raw"/>
-
-    <!--node name="cube_create_service" pkg="as_arm_gazebo" type="cube_create_service"/>
-    <node name="cube_get_position_service" pkg="as_arm_gazebo" type="cube_get_position_service"/>
-    <node name="cube_set_position_service" pkg="as_arm_gazebo" type="cube_set_position_service"/-->
 
 </launch>
 

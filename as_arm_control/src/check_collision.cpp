@@ -1,6 +1,6 @@
 /**
  * check collision node
- * author: yaojian <yao_62995@163.com>
+ * author: yaojian <yao62995<yao_62995@163.com>>
  * last revise: 2016-11-10
 **/
 

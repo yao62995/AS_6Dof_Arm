@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author: yao_62995@163.com
+# author: yao62995<yao_62995@163.com>
 
 import sys
 import cv2
@@ -10,12 +10,23 @@ import rospy
 import tf
 from gazebo_msgs.msg import LinkStates, LinkState
 from gazebo_msgs.srv import GetLinkState
-from geometry_msgs.msg import Pose, Quaternion
+from geometry_msgs.msg import Pose, Quaternion, PoseStamped
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 from sensor_msgs.msg import CompressedImage, JointState
+import moveit_commander
 from as_arm_description.srv import CheckCollisionValid
+from common import logger
 
 DEG_TO_RAD = 0.0174533  # PI/180
+
+# init moveit commander
+moveit_commander.roscpp_initialize(sys.argv)
+# init robot model
+ros_robot = moveit_commander.RobotCommander()
+# init robot scene
+ros_scene = moveit_commander.PlanningSceneInterface()
+# init moveit group
+arm_group = ros_robot.get_group("arm")
 
 
 class ArmJointManager(object):
@@ -24,13 +35,6 @@ class ArmJointManager(object):
     MaxGripperJointValue = 0.015
 
     def __init__(self):
-        # init moveit commander
-        # moveit_commander.roscpp_initialize(sys.argv)
-        # init robot model
-        # robot = moveit_commander.RobotCommander()
-        # init move group
-        # self.arm_group = moveit_commander.MoveGroupCommander("arm")
-
         self.joint_state = JointState()
         self.arm_map = dict()
         self.joint_pub = rospy.Publisher("/as_arm/set_joints_states", JointState, queue_size=1)
@@ -38,6 +42,7 @@ class ArmJointManager(object):
         # end effector service
         self.check_collision_client = rospy.ServiceProxy('/check_collision', CheckCollisionValid)
         self.tf_listener = tf.TransformListener()
+
 
     def callback_joint(self, data):
         if len(self.arm_map) == 0:
@@ -53,7 +58,7 @@ class ArmJointManager(object):
         """
         self.joint_state.name = names
         self.joint_state.position = values
-        # print "move joints:", values
+        logger.debug("move joints: %s" % str(values))
         self.joint_pub.publish(self.joint_state)
 
     def move_arm_joints(self, names, values):
@@ -71,11 +76,12 @@ class ArmJointManager(object):
         return [self.arm_map[name][1] for name in names]
 
     def open_gripper(self):
-        values = [-self.MaxGripperJointValue, self.MaxGripperJointValue]
-        return self.move_joints(self.ArmJointNames[5:], values)
+        return self.move_joints(self.ArmJointNames[5:], [0, 0])
 
-    def close_gripper(self):
-        return self.move_joints(self.ArmJointNames[5:], [0] * 2)
+    def close_gripper(self, values=None):
+        if values is None:
+            values = [-self.MaxGripperJointValue, self.MaxGripperJointValue]
+        return self.move_joints(self.ArmJointNames[5:], values)
 
     def read_arm_joints(self, names):
         # return map(lambda x: int(x / DEG_TO_RAD), self.read_joints(names))
@@ -90,7 +96,7 @@ class ArmJointManager(object):
         """
         (trans, rot) = self.tf_listener.lookupTransform("/world", "/grasp_frame_link", rospy.Time(0))
         ret = list(trans)
-        ret += list(euler_from_quaternion(list(rot)))
+        # ret += list(euler_from_quaternion(list(rot)))
         return ret
 
     def check_collision(self, joint_values):
@@ -98,10 +104,14 @@ class ArmJointManager(object):
         :param joint_values: a list of joint values
         :return: true if collision
         """
-        if len(joint_values) == 6:
-            joint_values = joint_values + [-joint_values[5]]
+        joint_values += self.read_gripper_joints()
         return self.check_collision_client(joint_values).valid
 
+    def attach_cube(self, name):
+        ros_scene.attach_box("grasp_frame_link", name)
+
+    def remove_attach_cube(self, name):
+        ros_scene.remove_attached_object("grasp_frame_link", name)
 
 
 class CubesManager(object):
@@ -114,7 +124,11 @@ class CubesManager(object):
         # pos publisher
         self.pose_pub = rospy.Publisher("/gazebo/set_link_state", LinkState, queue_size=1)
         self.pose_sub = rospy.Subscriber("/gazebo/cubes", LinkStates, callback=self.callback_state, queue_size=1)
-        # set base_link to (0,0,0)
+
+    def reset_cube(self):
+        logger.info("create cube object")
+        self.remove_cube("Grasp_Object")
+        self.add_cube("Grasp_Object")
 
     def callback_state(self, data):
         for idx, link in enumerate(data.name):
@@ -123,6 +137,23 @@ class CubesManager(object):
             pose[0] = data.pose[idx].position.x - 0.18
             pose[1] = data.pose[idx].position.y
             pose[2] = data.pose[idx].position.z + 0.05
+
+    def add_cube(self, name):
+        p = PoseStamped()
+        p.header.frame_id = ros_robot.get_planning_frame()
+        p.header.stamp = rospy.Time.now()
+
+        # p.pose = self._arm.get_random_pose().pose
+        p.pose.position.x = -0.18
+        p.pose.position.y = 0
+        p.pose.position.z = 0.05
+
+        q = quaternion_from_euler(0.0, 0.0, 0.0)
+        p.pose.orientation = Quaternion(*q)
+        ros_scene.add_box(name, p, (0.02, 0.02, 0.02))
+
+    def remove_cube(self, name):
+        ros_scene.remove_world_object(name)
 
     def read_cube_pose(self, name=None):
         if name is not None:
@@ -169,17 +200,3 @@ class CameraListener(object):
         return self.image
 
 
-if __name__ == "__main__":
-    try:
-        rospy.init_node('gazebo_listern', anonymous=True)
-        cube_obj = CubesManager()
-        rospy.sleep(2)
-        print "===== cube pose:", cube_obj.get_cube_pose()
-        cube_obj.set_cube_pose("cubes::cube1", [0, -0.3, 1])
-        print "===== cube pose:", cube_obj.get_cube_pose()
-
-        # listener = CameraListener(640, 480)
-        while not rospy.is_shutdown():
-            rospy.sleep(2)
-    except rospy.ROSInterruptException:
-        pass

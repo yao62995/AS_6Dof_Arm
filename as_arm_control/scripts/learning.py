@@ -36,7 +36,7 @@ class Experiment(object):
             # action = self.env.random_action()
             state_n, reward, term = self.env.step_forward(action)
             if test:
-                term = (t >= 100) or term
+                term = (t >= 200) or term
             else:
                 term = (t >= self.t_max) or term
             if term:
@@ -46,8 +46,9 @@ class Experiment(object):
             self.state = state_n
             t += 1
             R += reward
-            print "step:", t, ", reward:", reward, ", total_reward:", R
+            # print "step:", t, ", reward:", reward, ", total_reward:", R
             if is_exit:
+                del self.env
                 sys.exit(-1)
         return R, t
 
@@ -65,8 +66,8 @@ def signal_handler(signum, frame):
 
 
 def run(args):
-    state_dim = 6
-    action_dim = 6
+    state_dim = 5
+    action_dim = 5
     train_dir = create_dir('./result')
     agent = DDPG(state_dim, action_dim, train_dir=train_dir, gamma=args.gamma)
     env = ArmEnv(image_shape=agent.image_size, max_move_step=args.tmax, gamma=args.gamma)
@@ -99,8 +100,8 @@ def run(args):
 def parser_argument():
     parse = argparse.ArgumentParser()
     parse.add_argument("--train", type=int, default=1e3, help="train time step")
-    parse.add_argument("--test", type=int, default=1e3, help="test time step")
-    parse.add_argument("--tmax", type=int, default=200, help="time step max")
+    parse.add_argument("--test", type=int, default=1e2, help="test time step")
+    parse.add_argument("--tmax", type=int, default=300, help="time step max")
     parse.add_argument("--gamma", type=float, default=0.99, help="gamma")
     args = parse.parse_args()
     return args

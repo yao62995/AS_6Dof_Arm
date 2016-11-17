@@ -327,7 +327,7 @@ Visualization Manager:
             Value: true
         Loop Animation: true
         Robot Alpha: 0.5
-        Show Robot Collision: false
+        Show Robot Collision: true
         Show Robot Visual: true
         Show Trail: false
         State Display Time: 0.05 s
@@ -345,7 +345,7 @@ Visualization Manager:
         Interactive Marker Size: 0
         Joint Violation Color: 255; 0; 255
         Planning Group: left_arm
-        Query Goal State: true
+        Query Goal State: false
         Query Start State: false
         Show Workspace: false
         Start State Alpha: 1

@@ -13,7 +13,4 @@
 					          joint6_position_controller
                               joint7_position_controller"/>
 
-
-    <node name="arm_joint_pose" pkg="as_arm_gazebo" type="arm_joint_pose.py" output="screen"/>
-    <node name="arm_joint_sync" pkg="as_arm_gazebo" type="arm_joint_sync.py" output="screen"/>
 </launch>

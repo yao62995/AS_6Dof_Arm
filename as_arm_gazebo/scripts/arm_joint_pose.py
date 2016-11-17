@@ -16,7 +16,7 @@ class ArmJointPose:
         self.joint_pub = dict()
         self.joint_pose = dict()
         for idx, name in enumerate(self.joint_names):
-            pub = rospy.Publisher("/as_arm/joint%d_position_controller/command" % (idx + 1), Float64, queue_size=1)
+            pub = rospy.Publisher("/as_arm/joint%d_position_controller/command" % (idx + 1), Float64, queue_size=3)
             self.joint_pub[name] = pub
             self.joint_pose[name] = Float64()
 

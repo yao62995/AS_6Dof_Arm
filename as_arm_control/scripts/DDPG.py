@@ -73,7 +73,8 @@ class DDPG(Base):
             vw1, vb1 = self.get_variables("v1", shape=[8, 8, 1, 32])
             vw2, vb2 = self.get_variables("v2", shape=[4, 4, 32, 16])
             # concat
-            w3, b3 = self.get_variables("fc3", (1536, self.actions_dim), wd=wd, val_range=(-3e-4, 3e-4), collect=scope)
+            w3, b3 = self.get_variables("fc3", (1536, self.actions_dim * 3), wd=wd, val_range=(-3e-4, 3e-4),
+                                        collect=scope)
             return [w1, b1, w2, b2, vw1, vb1, vw2, vb2, w3, b3]
 
     def critic_variables(self, scope, wd=0.01, dim=512):
@@ -99,13 +100,15 @@ class DDPG(Base):
             flat1 = tf.reshape(conv2, [-1, 1280])
             # concat
             concat1 = tf.concat(1, [fc2, flat1], name="concat_state")
-            logits = tf.matmul(concat1, w3) + b3
+            fc3 = tf.matmul(concat1, w3) + b3
+            logits = tf.arg_max(tf.reshape(fc3, (-1, self.actions_dim, 3)), dimension=2)
             return logits
 
     def critic_network(self, op_scope, state, action, theta):
         weight = [theta[idx] for idx in xrange(0, len(theta), 2)]
         bias = [theta[idx] for idx in xrange(1, len(theta), 2)]
         with tf.variable_scope(op_scope, "critic", [state, action]) as scope:
+            action = tf.cast(action, tf.float32)
             # reshape
             flat1 = tf.reshape(state, (-1, self.states_dim), name="flat1")
             fc1 = tf.nn.relu(tf.matmul(flat1, weight[0]) + bias[0])

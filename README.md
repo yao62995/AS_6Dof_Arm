@@ -39,6 +39,19 @@
 * 相关控制脚本位于 _as_arm_control/test/_目录中
     * 抓取脚本: pick_and_place.py
     * moveit运动规划： test_planner.py
+* 控制gazebo joint角度： 
+
+        rostopic pub -1 /as_arm/joint1_position_controller/command std_msgs/Float64 "data: 0"
+        rostopic pub -1 /as_arm/joint2_position_controller/command std_msgs/Float64 "data: 0.2834"
+        rostopic pub -1 /as_arm/joint3_position_controller/command std_msgs/Float64 "data: -0.9736"
+        rostopic pub -1 /as_arm/joint4_position_controller/command std_msgs/Float64 "data: -1.4648"
+        rostopic pub -1 /as_arm/joint5_position_controller/command std_msgs/Float64 "data: 0"
+        rostopic pub -1 /as_arm/joint6_position_controller/command std_msgs/Float64 "data: -0.015"
+        rostopic pub -1 /as_arm/joint7_position_controller/command std_msgs/Float64 "data: 0.015"
+        
+* 控制gazebo cube位置：  
+
+        rostopic pub -1 /gazebo/set_link_state gazebo_msgs/LinkState "{link_name: cube1, pose: {position: {x: -0.2, y: 0, z: 1.0}, orientation: {x: 0,y: 0, z: 0, w: 1.0}}, twist: {}, reference_frame: world}"
 
 ## 真实环境运行：
 * arduino 文件在 as_arm_real/data/servo_v4.0.ino
@@ -56,3 +69,21 @@
     * 仿真环境Ａgent接口:  asm_env.py
     * 训练脚本：learning.py
 
+## 更新日志 2016-11-17
+* 碰撞处理
+    * 产生碰撞时每个关节随机选择某个(-4,4)的角度范围，并检测碰撞，直到没有检测到碰撞时执行该action
+* ddpg  actor网络处理
+    * 输出层更新为action_dim * 3，再reshape为（action_dim,  3），执行arg_max操作得到5个范围在[0, 2]的整数，再-1得到[-1, 1]的整数作为机械臂的输出action
+* arm 和 gripper分开处理
+    * 5个arm joint 和 2个gripper joint，训练网络时只控制5个arm joint。当检测到gripper_frame和cube_pose的距离小于最小阈值时视为到达目标，执行抓取任务，并将cube物体attach到gripper上。
+* 针对gazebo中机械臂执行操作的震荡问题处理
+    * 调整joint的PID参数保证快速平滑性
+    * 调整link的质量属性和惯性属性，减少惯性
+* 针对gazebo joint command在话题队列中丢失的处理：
+    * 增加joint command的queue队列大小，同时调整训练速度，协调与joint command执行速度的频率
+* gazebo/ros/moveit的交互通信
+    * gazebo 回传摄像头图片，moveit检测碰撞，ros协调通信。涉及end effector、cube、arm_joints、gripper_joints的控制和状态信息。
+    * joint相关的话题："/joint_states"设置rviz的joints角度，"as_arm/joint_states"获取当前joints角度，"as_arm/joints_position_controller/command"设置gazebo的joints角度
+    * cube相关的话题："/gazebo/cubes"获取cube位姿， "/gazebo/set_link_state"设置cube位姿。
+    * cube在moveit中使用scene.add_box()生成并与gazebo中的cube同步
+* 摄像头视野和位置的调整

@@ -66,7 +66,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -97,7 +97,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -128,7 +128,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -159,7 +159,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -190,7 +190,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -447,7 +447,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -475,7 +475,7 @@
       </geometry>
     </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -488,7 +488,7 @@
     <child link="gripper_finger_link1"/>
     <origin xyz="0 0 0.002"/>
     <axis xyz="0 1 0"/>
-    <limit effort="100" lower="-0.015" upper="0" velocity="1.0"/>
+    <limit effort="200" lower="-0.015" upper="0" velocity="1.0"/>
     <dynamics damping="50" friction="1"/>
   </joint>
   <link name="gripper_finger_link1">
@@ -499,8 +499,14 @@
       </geometry>
       <material name="Black"/>
     </visual>
+    <collision>
+      <origin xyz="0 0.016 0.03"/>
+      <geometry>
+        <box size="0.01 0.002 0.06"/>
+      </geometry>
+    </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -513,7 +519,7 @@
     <child link="gripper_finger_link2"/>
     <origin xyz="0 0 0.002"/>
     <axis xyz="0 1 0"/>
-    <limit effort="100" lower="0" upper="0.015" velocity="1.0"/>
+    <limit effort="200" lower="0" upper="0.015" velocity="1.0"/>
     <dynamics damping="50" friction="1"/>
   </joint>
   <link name="gripper_finger_link2">
@@ -524,8 +530,14 @@
       </geometry>
       <material name="Black"/>
     </visual>
+    <collision>
+      <origin xyz="0 -0.016 0.03"/>
+      <geometry>
+        <box size="0.01 0.002 0.06"/>
+      </geometry>
+    </collision>
     <inertial>
-      <mass value="1"/>
+      <mass value="0.1"/>
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="0.5" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -538,7 +550,7 @@
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <mass value="0.0001"/>
       <cuboid_inertia mass="0.0001" x="0.001" y="0.001" z="0.001"/>
-      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="100.0" iyz="0.0" izz="1.0"/>
+      <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="10.0" iyz="0.0" izz="1.0"/>
     </inertial>
     <!--visual>
             <origin xyz="0 0 0"/>

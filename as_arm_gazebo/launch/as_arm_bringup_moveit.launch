@@ -14,6 +14,12 @@
     <!-- ros_control trajectory control dof arm launch file -->
     <!--include file="$(find as_arm_gazebo)/launch/as_arm_trajectory_controller.launch"/-->
 
+    <node name="arm_joint_pose" pkg="as_arm_gazebo" type="arm_joint_pose.py" output="screen"/>
+    <node name="arm_joint_sync" pkg="as_arm_gazebo" type="arm_joint_sync.py" output="screen"/>
+
+    <!-- cube pose -->
+    <node name="cube_link_pose" pkg="as_arm_gazebo" type="cube_link_pose.py" output="screen"/>
+
     <!-- moveit launch file -->
     <include file="$(find as_arm_moveit_config)/launch/moveit_planning_execution.launch"/>
 
