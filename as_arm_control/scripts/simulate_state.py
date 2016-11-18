@@ -107,6 +107,22 @@ class ArmJointManager(object):
         joint_values += self.read_gripper_joints()
         return self.check_collision_client(joint_values).valid
 
+    def move_plannar(self, names, source_joints, target_joints):
+        source_joints = dict((n, j) for n, j in zip(names, source_joints))
+        target_joints = dict((n, j) for n, j in zip(names, target_joints))
+        joint_poses = []
+        try_time = 0
+        while len(joint_poses) == 0 and try_time < 20:
+            try:
+                arm_group.go(joints=source_joints, wait=True)
+                plan_msg = arm_group.plan(joints=target_joints)
+                for p in plan_msg.joint_trajectory.points:
+                    joint_poses.append(p.positions)
+            except:
+                joint_poses = []
+                try_time += 1
+        return joint_poses
+
     def attach_cube(self, name):
         ros_scene.attach_box("grasp_frame_link", name)
 
@@ -136,7 +152,7 @@ class CubesManager(object):
             pose = self.cubes_state[link]
             pose[0] = data.pose[idx].position.x - 0.18
             pose[1] = data.pose[idx].position.y
-            pose[2] = data.pose[idx].position.z + 0.05
+            pose[2] = data.pose[idx].position.z + 0.046
 
     def add_cube(self, name):
         p = PoseStamped()
@@ -146,7 +162,7 @@ class CubesManager(object):
         # p.pose = self._arm.get_random_pose().pose
         p.pose.position.x = -0.18
         p.pose.position.y = 0
-        p.pose.position.z = 0.05
+        p.pose.position.z = 0.046
 
         q = quaternion_from_euler(0.0, 0.0, 0.0)
         p.pose.orientation = Quaternion(*q)
@@ -172,7 +188,7 @@ class CubesManager(object):
         p = self.cubes_pose.pose
         p.position.x = pose[0] + 0.18
         p.position.y = pose[1]
-        p.position.z = pose[2] - 0.05
+        p.position.z = pose[2] - 0.046
         if orient is None:
             orient = [0, 0, 0]
         q = quaternion_from_euler(orient[0], orient[1], orient[2])

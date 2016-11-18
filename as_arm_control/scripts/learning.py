@@ -101,7 +101,7 @@ def parser_argument():
     parse = argparse.ArgumentParser()
     parse.add_argument("--train", type=int, default=1e3, help="train time step")
     parse.add_argument("--test", type=int, default=1e2, help="test time step")
-    parse.add_argument("--tmax", type=int, default=300, help="time step max")
+    parse.add_argument("--tmax", type=int, default=200, help="time step max")
     parse.add_argument("--gamma", type=float, default=0.99, help="gamma")
     args = parse.parse_args()
     return args

@@ -4,6 +4,7 @@
 
 import random
 import sys
+import thread
 import copy
 from math import sqrt, pow, exp
 
@@ -22,9 +23,9 @@ class ArmEnv(Environment):
                 'finger_joint1': {"idx": 5, 'bias': 90, 'range': [-90, 0], 'init': 0},
                 'finger_joint2': {"idx": 5, 'bias': 90, 'range': [0, 90], 'init': 0}
                 }
-    CubeMap = {'cube1': {'init': [-0.18, 0, 0.05]}}
+    CubeMap = {'cube1': {'init': [-0.18, 0, 0.046]}}
     # pose error threshold
-    PoseErrorThreshold = 1e-2
+    PoseErrorThreshold = 5e-3
 
     def __init__(self, image_shape, max_move_step=200, gamma=0.99):
         self.gamma = gamma
@@ -42,8 +43,7 @@ class ArmEnv(Environment):
         # init joint name
         self.joint_names = ArmJointManager.ArmJointNames
         # target pose, where cube to be placed, format: [x, y, z, rot_x, rot_y, rot_z]
-        self.target_pose = [0, -0.18, 0.05, 0, 0, 0]
-        # self.target_pose = [-0.18, 0, 0.05, 0, 0, 0]
+        self.target_joints = [1.5707, 0.2834, -1.0471, -1.456, 0]
         # set move counter
         self.move_counter = 0
         # set max move step
@@ -52,6 +52,7 @@ class ArmEnv(Environment):
         self.terminal = False
         # check whether cube grasped
         self.cube_grasped = False
+        self.attach_flag = False
         # init set JointMap Angles to DEG format
         print "======joint range:"
         for name in self.joint_names:
@@ -72,10 +73,8 @@ class ArmEnv(Environment):
         # reset cube position
         for k, v in self.CubeMap.items():
             self.cube_mgr.set_cube_pose(k, v['init'])
-        if self.cube_grasped:
-            self.joint_mgr.remove_attach_cube("Grasp_Object")
         # reset cube
-        self.cube_mgr.reset_cube()
+        # self.cube_mgr.reset_cube()
         rospy.sleep(5.0)
         # reset move counter
         self.move_counter = 0
@@ -128,7 +127,6 @@ class ArmEnv(Environment):
         pg = self.joint_mgr.read_gripper_frame()
         if self.distance(pc, pg) < self.PoseErrorThreshold:  # grasped
             logger.info("success pickup cube in step[%d]" % self.move_counter)
-            self.joint_mgr.attach_cube("Grasp_Object")
             return True
         return False
 
@@ -137,39 +135,26 @@ class ArmEnv(Environment):
         self.move_counter += 1
         if self.move_counter >= self.max_step_step:  # out of step limit
             return True
-        # check whether cube in gripper
-        if not self.cube_grasped:
-            return False
         # check whether reach goal
+        cube_pose = self.cube_mgr.read_cube_pose("cube1")
         arm_pose = self.joint_mgr.read_gripper_frame()
-        if self.distance(self.target_pose, arm_pose, size=3) < self.PoseErrorThreshold:  # reach goal
-            self.joint_mgr.open_gripper()
-            self.joint_mgr.remove_attach_cube("Grasp_Object")
+        if self.distance(cube_pose, arm_pose, size=3) < self.PoseErrorThreshold:  # reach goal
+            self.cube_grasped = True
             logger.info("success place cube in step[%d]" % self.move_counter)
             return True
         return False
 
     def get_reward(self):
         if self.terminal:  # when terminal
-            if self.move_counter < self.max_step_step:  # when arm reach goal
+            if self.cube_grasped:  # when arm reach goal
                 return 100
             else:
                 return -1
-        if not self.cube_grasped:  # when not grasped
-            if self.check_cube_in_gripper():  # when cube just grasped
-                self.cube_grasped = True
-                self.joint_mgr.close_gripper([-0.05, 0.05])
-                return 100
-            else:  # rewarded by distance between gripper and cube
-                arm_pose = self.joint_mgr.read_gripper_frame()
-                cube_pose = self.cube_mgr.read_cube_pose("cube1")
-                dist = self.distance(arm_pose, cube_pose, size=3)
-                # print "distance:", dist, ", arm:", arm_pose[:3], ", cube:", cube_pose[:3]
-                return - exp(-1 * self.gamma * dist)
-        else:  # rewarded by distance between gripper and target pose
-            arm_pose = self.joint_mgr.read_gripper_frame()
-            dist = self.distance(arm_pose, self.target_pose, size=3)
-            return - exp(-1 * self.gamma * dist)
+        arm_pose = self.joint_mgr.read_gripper_frame()
+        cube_pose = self.cube_mgr.read_cube_pose("cube1")
+        dist = self.distance(arm_pose, cube_pose, size=3)
+        # print "distance:", dist, ", arm:", arm_pose[:3], ", cube:", cube_pose[:3]
+        return - exp(-1 * self.gamma * dist)
 
     def check_collision(self, action):
         valid_action = copy.deepcopy(action)
@@ -185,6 +170,37 @@ class ArmEnv(Environment):
                 break
         return valid_action, status
 
+    def attach_cube_gripper(self, cube_name):
+        while self.attach_flag:
+            self.cube_mgr.set_cube_pose(cube_name, self.joint_mgr.read_gripper_frame())
+
+    def place_cube(self, source_joints):
+        # close gripper
+        self.joint_mgr.close_gripper([-0.009, 0.009])
+        rospy.sleep(2.0)
+        # attach cube
+        # self.joint_mgr.attach_cube("Grasp_Object")
+        self.attach_flag = True
+        thread.start_new_thread(self.attach_cube_gripper, ("cube1",))
+        # place plannar
+        middle_pose = [self.JointMap[name]['init'] for name in self.joint_names[:5]]
+        joint_poses = self.joint_mgr.move_plannar(self.joint_names[:5], source_joints, middle_pose)
+        for pose in joint_poses:
+            self.joint_mgr.move_arm_joints(self.joint_names[:5], pose)
+            rospy.sleep(0.2)
+        rospy.sleep(2.0)
+        joint_poses = self.joint_mgr.move_plannar(self.joint_names[:5], middle_pose, self.target_joints)
+        for pose in joint_poses:
+            self.joint_mgr.move_arm_joints(self.joint_names[:5], pose)
+            rospy.sleep(0.2)
+        rospy.sleep(2.0)
+        # open gripper
+        self.joint_mgr.open_gripper()
+        self.attach_flag = False
+        # remove attach cube
+        # self.joint_mgr.remove_attach_cube("Grasp_Object")
+        rospy.sleep(3.0)
+
     def step_forward(self, action):
         """
         :param action:  a list of joint values, (float type)
@@ -196,17 +212,12 @@ class ArmEnv(Environment):
         # check collision
         action, status = self.check_collision(action)
         self.joint_mgr.move_arm_joints(self.joint_names[:5], action[:5])
-        # set cube pose when grasped
-        if self.cube_grasped:
-            self.cube_mgr.set_cube_pose("cube1", self.joint_mgr.read_gripper_frame())
-        if status == -1:  # move to init position need some time
-            rospy.sleep(3)
-        else:
-            rospy.sleep(0.1)
-        # print "joints:", self.joint_mgr.read_joints(self.joint_names)
+        # wait to joint move
+        rospy.sleep(0.1) if status == 0 else rospy.sleep(3)
         # check terminal
         self.terminal = self.check_terminal()
-        # get reward
+        if self.cube_grasped:
+            self.place_cube(action[:5])
         reward = self.get_reward()
         state = self.get_state()
         return state, reward, self.terminal
