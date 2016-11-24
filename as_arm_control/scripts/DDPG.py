@@ -101,7 +101,7 @@ class DDPG(Base):
             # concat
             concat1 = tf.concat(1, [fc2, flat1], name="concat_state")
             fc3 = tf.matmul(concat1, w3) + b3
-            logits = tf.arg_max(tf.reshape(fc3, (-1, self.actions_dim, 9)), dimension=2)
+            logits = tf.arg_max(tf.reshape(fc3, (-1, self.actions_dim, 9)), dimension=2) - 4
             return logits
 
     def critic_network(self, op_scope, state, action, theta):
@@ -183,7 +183,8 @@ class DDPG(Base):
         joint_state, view_state = state
         action = self.ops["act_logit"]([joint_state], [view_state])[0]
         if with_noise:
-            action = np.clip(action + self.explore_noise.noise(), -4, 4).astype(int)
+            action = action + self.explore_noise.noise()
+        action = np.clip(action, -4, 4).astype(int)
         return action
 
     def feedback(self, state, action, reward, terminal, state_n):

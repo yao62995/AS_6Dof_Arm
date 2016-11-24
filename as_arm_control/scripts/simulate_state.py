@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author: yao62995<yao_62995@163.com>
+# author: yao62995 <yao_62995@163.com>
 
 import sys
 import cv2
@@ -87,6 +87,7 @@ class ArmJointManager(object):
             values = [-self.MaxGripperJointValue, self.MaxGripperJointValue]
         while repeat > 0:
             self.move_joints(self.ArmJointNames[5:], values)
+            repeat -= 1
 
     def read_arm_joints(self, names):
         # return map(lambda x: int(x / DEG_TO_RAD), self.read_joints(names))

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author: yao62995<yao_62995@163.com>
+# author: yao62995 <yao_62995@163.com>
 
 import random
 import sys
@@ -202,7 +202,7 @@ class ArmEnv(Environment):
         :param action:  a list of joint values, (float type)
         """
         values = self.joint_mgr.read_joints(self.joint_names[:5])
-        joint_action = [float((a - 4) * DEG_TO_RAD + v) for a, v in zip(action[:5], values)]
+        joint_action = [float(a * DEG_TO_RAD + v) for a, v in zip(action[:5], values)]
         # filter joint values
         joint_action = self.filter_joints(self.joint_names[:5], joint_action)
         # check collision
