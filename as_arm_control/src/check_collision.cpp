@@ -99,8 +99,8 @@ CheckCollisionNode handler;
 
 bool CheckCollisionRef(CheckCollisionValid::Request& req, CheckCollisionValid::Response& res) {
     res.valid = handler.CheckCollision(req.values);
-    handler.ShowCurrentJoints();
-    ROS_INFO_STREAM("Joint Collision Status:" << res.valid);
+    // handler.ShowCurrentJoints();
+    // ROS_INFO_STREAM("Joint Collision Status:" << res.valid);
     return true;
 }
 

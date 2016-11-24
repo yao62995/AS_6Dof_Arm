@@ -67,9 +67,11 @@ def signal_handler(signum, frame):
 
 def run(args):
     state_dim = 5
-    action_dim = 5
+    action_dim = 6
     train_dir = create_dir('./result')
     agent = DDPG(state_dim, action_dim, train_dir=train_dir, gamma=args.gamma)
+    agent.explore_noise.theta = 1.0
+    agent.explore_noise.sigma = 2.0
     env = ArmEnv(image_shape=agent.image_size, max_move_step=args.tmax, gamma=args.gamma)
 
     t_train, t_test = 0, 0
@@ -99,8 +101,8 @@ def run(args):
 
 def parser_argument():
     parse = argparse.ArgumentParser()
-    parse.add_argument("--train", type=int, default=1e3, help="train time step")
-    parse.add_argument("--test", type=int, default=1e2, help="test time step")
+    parse.add_argument("--train", type=int, default=5000, help="train time step")
+    parse.add_argument("--test", type=int, default=400, help="test time step")
     parse.add_argument("--tmax", type=int, default=200, help="time step max")
     parse.add_argument("--gamma", type=float, default=0.99, help="gamma")
     args = parse.parse_args()

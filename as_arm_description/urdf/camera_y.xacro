@@ -1,15 +1,15 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-    <property name="MAST_HEIGHT" value="0.35"/>
+    <property name="MAST_HEIGHT_y" value="0.35"/>
 
-    <joint name="camera_mast_joint" type="fixed">
-        <origin xyz="0 0.2 0" rpy="0 0 0"/>
+    <joint name="camera_mast_joint_y" type="fixed">
+        <origin xyz="0 -0.2 0" rpy="0 0 0"/>
         <parent link="bottom_link"/>
-        <child link="camera_mast_link"/>
+        <child link="camera_mast_link_y"/>
     </joint>
 
-    <link name="camera_mast_link">
+    <link name="camera_mast_link_y">
         <visual>
             <origin xyz="0 0 ${MAST_HEIGHT/2-0.02}" rpy="0 0 0"/>
             <geometry>
@@ -25,13 +25,13 @@
         </collision>
     </link>
 
-    <joint name="camera_mast_joint_2" type="fixed">
+    <joint name="camera_mast_joint_y_2" type="fixed">
         <origin xyz="0 0 ${MAST_HEIGHT-0.1}" rpy="0 0 0"/>
-        <parent link="camera_mast_link"/>
-        <child link="camera_mast_link_2"/>
+        <parent link="camera_mast_link_y"/>
+        <child link="camera_mast_link_y_2"/>
     </joint>
 
-    <link name="camera_mast_link_2">
+    <link name="camera_mast_link_y_2">
         <visual>
             <origin xyz="-0.07 0 0" rpy="0 0 0"/>
             <geometry>
@@ -47,14 +47,14 @@
         </collision>
     </link>
 
-    <joint name="camera_joint" type="fixed">
-        <origin xyz="-0.14 0 -0.005" rpy="0 ${60*deg_to_rad} -${90*deg_to_rad}"/>
-        <parent link="camera_mast_link_2"/>
-        <child link="camera_link"/>
+    <joint name="camera_joint_y" type="fixed">
+        <origin xyz="-0.14 0 -0.005" rpy="0 ${60*deg_to_rad} ${90*deg_to_rad}"/>
+        <parent link="camera_mast_link_y_2"/>
+        <child link="camera_link_y"/>
     </joint>
 
     <!-- Camera -->
-    <link name="camera_link">
+    <link name="camera_link_y">
         <collision>
             <origin xyz="0 0 -0.005" rpy="0 0 0"/>
             <geometry>
@@ -75,24 +75,10 @@
         </inertial>
     </link>
 
-    <!--joint name="camera_optical_joint" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <parent link="camera_link"/>
-        <child link="camera_optical_link"/>
-    </joint>
-
-    <link name="camera_optical_link">
-        <inertial>
-            <mass value="1e-5"/>
-            <origin xyz="0 0 0" rpy="${90*deg_to_rad} ${90*deg_to_rad} ${90*deg_to_rad}"/>
-            <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
-        </inertial>
-    </link-->
-
     <!-- camera -->
-    <gazebo reference="camera_link">
+    <gazebo reference="camera_link_y">
         <material>Gazebo/Red</material>
-        <sensor type="camera" name="camera1">
+        <sensor type="camera" name="camera2">
             <update_rate>30.0</update_rate>
             <camera name="head">
                 <!-- 50-degree FOV  = 0.873-->
@@ -115,10 +101,10 @@
             <plugin name="camera_sensor" filename="libgazebo_ros_camera.so">
                 <alwaysOn>true</alwaysOn>
                 <updateRate>0.0</updateRate>
-                <cameraName>camera</cameraName>
+                <cameraName>camera_y</cameraName>
                 <imageTopicName>image_raw</imageTopicName>
                 <cameraInfoTopicName>camera_info</cameraInfoTopicName>
-                <frameName>camera_link</frameName>
+                <frameName>camera_link_y</frameName>
                 <hackBaseline>0.07</hackBaseline>
                 <distortionK1>0.0</distortionK1>
                 <distortionK2>0.0</distortionK2>

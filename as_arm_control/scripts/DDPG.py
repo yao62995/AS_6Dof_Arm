@@ -70,10 +70,10 @@ class DDPG(Base):
             w1, b1 = self.get_variables("fc1", (self.states_dim, dim), wd=wd, collect=scope)
             w2, b2 = self.get_variables("fc2", (dim, dim), wd=wd, collect=scope)
             # view part
-            vw1, vb1 = self.get_variables("v1", shape=[8, 8, 1, 32])
+            vw1, vb1 = self.get_variables("v1", shape=[8, 8, 2, 32])
             vw2, vb2 = self.get_variables("v2", shape=[4, 4, 32, 16])
             # concat
-            w3, b3 = self.get_variables("fc3", (1536, self.actions_dim * 3), wd=wd, val_range=(-3e-4, 3e-4),
+            w3, b3 = self.get_variables("fc3", (1536, self.actions_dim * 9), wd=wd, val_range=(-3e-4, 3e-4),
                                         collect=scope)
             return [w1, b1, w2, b2, vw1, vb1, vw2, vb2, w3, b3]
 
@@ -92,7 +92,7 @@ class DDPG(Base):
             fc1 = tf.nn.relu(tf.matmul(joint_state, w1) + b1)
             fc2 = tf.nn.relu(tf.matmul(fc1, w2) + b2)
             # view part,
-            # (160, 120, 1) => (40, 30, 32)
+            # (160, 120, 2) => (40, 30, 32)
             conv1 = tf.nn.relu(tf.nn.bias_add(tf.nn.conv2d(view_state, vw1, strides=[1, 4, 4, 1], padding="SAME"), vb1))
             pool1 = max_pool(conv1)  # (40, 30, 32) => (20, 15, 32)
             # (20, 15, 32) => (10, 8, 16)
@@ -101,7 +101,7 @@ class DDPG(Base):
             # concat
             concat1 = tf.concat(1, [fc2, flat1], name="concat_state")
             fc3 = tf.matmul(concat1, w3) + b3
-            logits = tf.arg_max(tf.reshape(fc3, (-1, self.actions_dim, 3)), dimension=2)
+            logits = tf.arg_max(tf.reshape(fc3, (-1, self.actions_dim, 9)), dimension=2)
             return logits
 
     def critic_network(self, op_scope, state, action, theta):
@@ -130,7 +130,7 @@ class DDPG(Base):
             theta_qt, update_qt = self.target_exponential_moving_average(theta_q)
             # actor network
             joint_state = tf.placeholder(tf.float32, shape=(None, self.states_dim))
-            view_state = tf.placeholder(tf.float32, shape=(None, 160, 120, 1))
+            view_state = tf.placeholder(tf.float32, shape=(None, 160, 120, 2))
             act_logit = self.actor_network("actor", joint_state, view_state, theta_p)
             cri_logit = self.critic_network("critic", joint_state, act_logit, theta_q)
             # actor optimizer
@@ -148,7 +148,7 @@ class DDPG(Base):
             cri_train = self.critic_network("train_critic", joint_state, act_train, theta_q)
             # target network
             joint_state2 = tf.placeholder(tf.float32, shape=(None, self.states_dim))
-            view_state2 = tf.placeholder(tf.float32, shape=(None, 160, 120, 1))
+            view_state2 = tf.placeholder(tf.float32, shape=(None, 160, 120, 2))
             act_logit2 = self.actor_network("target_actor", joint_state2, view_state2, theta_pt)
             cri_logit2 = self.critic_network("target_critic", joint_state2, act_logit2, theta_qt)
             # train critic optimizer
@@ -183,7 +183,7 @@ class DDPG(Base):
         joint_state, view_state = state
         action = self.ops["act_logit"]([joint_state], [view_state])[0]
         if with_noise:
-            action = action + self.explore_noise.noise()
+            action = np.clip(action + self.explore_noise.noise(), -4, 4).astype(int)
         return action
 
     def feedback(self, state, action, reward, terminal, state_n):

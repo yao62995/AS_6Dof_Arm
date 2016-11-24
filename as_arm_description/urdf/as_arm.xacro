@@ -21,7 +21,7 @@
     <property name="M_PI" value="3.14159"/>
     <property name="SINK_WIDTH" value="0.2"/>
     <property name="SINK_WALL_THICK" value="0.005"/>
-    <property name="SINK_DEPTH" value="0.04"/>
+    <property name="SINK_DEPTH" value="0.025"/>
 
     <!-- Define materials mass -->
     <xacro:macro name="inertial_matrix" params="mass">
@@ -232,6 +232,7 @@
     </gazebo>
 
     <xacro:include filename="$(find as_arm_description)/urdf/camera.xacro"/>
+    <xacro:include filename="$(find as_arm_description)/urdf/camera_y.xacro"/>
     <xacro:include filename="$(find as_arm_description)/urdf/sink.xacro"/>
 
     <joint name="wrist_rot_joint" type="revolute">

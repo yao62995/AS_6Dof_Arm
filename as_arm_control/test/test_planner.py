@@ -285,22 +285,25 @@ def test_move_planer():
         # group.set_random_target()
         # plan_msg = group.plan()
         # group.execute(plan_msg=plan_msg, wait=True)
-        group.go(joints=joint, wait=True)
+        # group.go(joints=joint, wait=True)
 
 
         # =============== specify target config ==============
-        # up_right_joint_values = {"base_joint": 0, "shoulder_joint": 0, "elbow_joint": 0,
-        #                          "wrist_flex_joint": 0, "wrist_rot_joint": 0}
-        # pre_grasp_joint_values = {"base_joint": 0.5471, "shoulder_joint": -0.9766, "elbow_joint": -0.5834,
-        #                           "wrist_flex_joint": -0.9795, "wrist_rot_joint": -0.006}
-        # test_joint_values = {"base_joint": 0, "shoulder_joint": 0, "elbow_joint": 0,
-        #                      "wrist_flex_joint": 0, "wrist_rot_joint": -60 * DEG_TO_RAD}
-        # if switch:
-        #     plan_msg = group.plan(joints=pre_grasp_joint_values)
-        # else:
-        #     plan_msg = group.plan(joints=up_right_joint_values)
-        # switch = not switch
-        # group.execute(plan_msg=plan_msg, wait=True)
+        joint_names = ["base_joint", "shoulder_joint", "elbow_joint", "wrist_flex_joint", "wrist_rot_joint"]
+        up_right_joint_values = {"base_joint": 0, "shoulder_joint": 0, "elbow_joint": 0,
+                                 "wrist_flex_joint": 0, "wrist_rot_joint": 0}
+        pre_grasp_joint_values = {"base_joint": 0.5471, "shoulder_joint": -0.9766, "elbow_joint": -0.5834,
+                                  "wrist_flex_joint": -0.9795, "wrist_rot_joint": -0.006}
+        test_joint_values = [0, 0.65, -0.9736, -1.4648, 0]
+        test_joint_map = dict((n, j) for n, j in zip(joint_names, test_joint_values))
+        test_joint_values_2 = [1.5707, 0.5167, -1.0471, -1.456, 0]
+        test_joint_map_2 = dict((n, j) for n, j in zip(joint_names, test_joint_values_2))
+        if switch:
+            plan_msg = group.plan(joints=test_joint_map)
+        else:
+            plan_msg = group.plan(joints=test_joint_map_2)
+        switch = not switch
+        group.execute(plan_msg=plan_msg, wait=True)
         rospy.sleep(3)
 
         # ============ specify target positions and orientations ==================

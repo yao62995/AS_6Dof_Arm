@@ -1,20 +1,20 @@
 <?xml version="1.0"?>
 <robot name="simple_box" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <property name="BOX_SIZE" value="0.02"/>
+  <property name="BOX_SIZE" value="0.012"/>
   <link name="cube1">
     <inertial>
       <origin xyz="-0.18 0 0" />
-      <mass value="0.1" />
+      <mass value="0.02" />
       <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
     </inertial>
     <visual>
-      <origin xyz="-0.18 0 0.05"/>
+      <origin xyz="-0.18 0 0.046"/>
       <geometry>
         <box size="${BOX_SIZE} ${BOX_SIZE} ${BOX_SIZE}" />
       </geometry>
     </visual>
     <collision>
-      <origin xyz="-0.18 0 0.05"/>
+      <origin xyz="-0.18 0 0.046"/>
       <geometry>
         <box size="${BOX_SIZE} ${BOX_SIZE} ${BOX_SIZE}" />
       </geometry>

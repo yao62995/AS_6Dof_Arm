@@ -198,27 +198,27 @@
     <material>Gazebo/Black</material>
   </gazebo>
   <joint name="camera_mast_joint" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0.1 0"/>
+    <origin rpy="0 0 0" xyz="0 0.2 0"/>
     <parent link="bottom_link"/>
     <child link="camera_mast_link"/>
   </joint>
   <link name="camera_mast_link">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.205"/>
+      <origin rpy="0 0 0" xyz="0 0 0.155"/>
       <geometry>
-        <box size="0.01 0.01 0.45"/>
+        <box size="0.01 0.01 0.35"/>
       </geometry>
       <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz=" 0 0 0.205"/>
+      <origin rpy="0 0 0" xyz=" 0 0 0.155"/>
       <geometry>
-        <box size="0.01 0.01 0.45"/>
+        <box size="0.01 0.01 0.35"/>
       </geometry>
     </collision>
   </link>
   <joint name="camera_mast_joint_2" type="fixed">
-    <origin rpy="0 0 0" xyz="0 0 0.35"/>
+    <origin rpy="0 0 0" xyz="0 0 0.25"/>
     <parent link="camera_mast_link"/>
     <child link="camera_mast_link_2"/>
   </joint>
@@ -238,7 +238,7 @@
     </collision>
   </link>
   <joint name="camera_joint" type="fixed">
-    <origin rpy="0 1.57079632679 0" xyz="-0.14 0 -0.005"/>
+    <origin rpy="0 1.0471975512 -1.57079632679" xyz="-0.14 0 -0.005"/>
     <parent link="camera_mast_link_2"/>
     <child link="camera_link"/>
   </joint>
@@ -315,6 +315,111 @@
       </plugin>
     </sensor>
   </gazebo>
+  <joint name="camera_mast_joint_y" type="fixed">
+    <origin rpy="0 0 0" xyz="0 -0.2 0"/>
+    <parent link="bottom_link"/>
+    <child link="camera_mast_link_y"/>
+  </joint>
+  <link name="camera_mast_link_y">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0.155"/>
+      <geometry>
+        <box size="0.01 0.01 0.35"/>
+      </geometry>
+      <material name="Gray"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz=" 0 0 0.155"/>
+      <geometry>
+        <box size="0.01 0.01 0.35"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="camera_mast_joint_y_2" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0.25"/>
+    <parent link="camera_mast_link_y"/>
+    <child link="camera_mast_link_y_2"/>
+  </joint>
+  <link name="camera_mast_link_y_2">
+    <visual>
+      <origin rpy="0 0 0" xyz="-0.07 0 0"/>
+      <geometry>
+        <box size="0.15 0.01 0.01"/>
+      </geometry>
+      <material name="Gray"/>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="-0.07 0 0"/>
+      <geometry>
+        <box size="0.15 0.01 0.01"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="camera_joint_y" type="fixed">
+    <origin rpy="0 1.0471975512 1.57079632679" xyz="-0.14 0 -0.005"/>
+    <parent link="camera_mast_link_y_2"/>
+    <child link="camera_link_y"/>
+  </joint>
+  <!-- Camera -->
+  <link name="camera_link_y">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.005"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.005"/>
+      <geometry>
+        <box size="0.01 0.01 0.01"/>
+      </geometry>
+      <material name="Red"/>
+    </visual>
+    <inertial>
+      <mass value="1e-5"/>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <!-- camera -->
+  <gazebo reference="camera_link_y">
+    <material>Gazebo/Red</material>
+    <sensor name="camera2" type="camera">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <!-- 50-degree FOV  = 0.873-->
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>640</width>
+          <height>480</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin filename="libgazebo_ros_camera.so" name="camera_sensor">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>camera_y</cameraName>
+        <imageTopicName>image_raw</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_link_y</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
   <!-- ////  bottom link -> sink bottom link  ////-->
   <joint name="sink_bottom_joint" type="fixed">
     <origin rpy="0 0 0" xyz="-0.17 0 0"/>
@@ -347,16 +452,16 @@
   </joint>
   <link name="sink_wall_left">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.2 0.005 0.04"/>
+        <box size="0.2 0.005 0.025"/>
       </geometry>
       <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.2 0.005 0.04"/>
+        <box size="0.2 0.005 0.025"/>
       </geometry>
     </collision>
   </link>
@@ -368,16 +473,16 @@
   </joint>
   <link name="sink_wall_right">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.2 0.005 0.04"/>
+        <box size="0.2 0.005 0.025"/>
       </geometry>
       <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.2 0.005 0.04"/>
+        <box size="0.2 0.005 0.025"/>
       </geometry>
     </collision>
   </link>
@@ -389,16 +494,16 @@
   </joint>
   <link name="sink_wall_up">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.005 0.2 0.04"/>
+        <box size="0.005 0.2 0.025"/>
       </geometry>
       <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.005 0.2 0.04"/>
+        <box size="0.005 0.2 0.025"/>
       </geometry>
     </collision>
   </link>
@@ -410,16 +515,16 @@
   </joint>
   <link name="sink_wall_down">
     <visual>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.005 0.2 0.04"/>
+        <box size="0.005 0.2 0.025"/>
       </geometry>
       <material name="Gray"/>
     </visual>
     <collision>
-      <origin rpy="0 0 0" xyz="0 0 0.02"/>
+      <origin rpy="0 0 0" xyz="0 0 0.0125"/>
       <geometry>
-        <box size="0.005 0.2 0.04"/>
+        <box size="0.005 0.2 0.025"/>
       </geometry>
     </collision>
   </link>

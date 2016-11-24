@@ -1,3 +1,3 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# author: yaojian@b.360.cn
+# author: yao62995<yao_62995@163.com>

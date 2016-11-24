@@ -15,15 +15,15 @@ from simulate_state import ArmJointManager, CubesManager, CameraListener, DEG_TO
 
 
 class ArmEnv(Environment):
-    JointMap = {'base_joint': {"idx": 0, 'bias': 90, 'range': [-90, 90], 'init': 0},
-                'shoulder_joint': {"idx": 1, 'bias': 95, 'range': [-85, 85], 'init': 0.2834},
-                'elbow_joint': {"idx": 2, 'bias': 90, 'range': [-60, 90], 'init': -0.9736},
-                'wrist_flex_joint': {"idx": 3, 'bias': 90, 'range': [-90, 0], 'init': -1.4648},
-                'wrist_rot_joint': {"idx": 4, 'bias': 90, 'range': [-90, 0], 'init': 0},
-                'finger_joint1': {"idx": 5, 'bias': 90, 'range': [-90, 0], 'init': 0},
-                'finger_joint2': {"idx": 5, 'bias': 90, 'range': [0, 90], 'init': 0}
+    JointMap = {'base_joint': {"idx": 0, 'bias': 90, 'range': [-90, 90]},
+                'shoulder_joint': {"idx": 1, 'bias': 95, 'range': [-85, 85]},
+                'elbow_joint': {"idx": 2, 'bias': 90, 'range': [-60, 90]},
+                'wrist_flex_joint': {"idx": 3, 'bias': 90, 'range': [-90, 0]},
+                'wrist_rot_joint': {"idx": 4, 'bias': 90, 'range': [-90, 0]},
+                'finger_joint1': {"idx": 5, 'bias': 90, 'range': [-90, 0]},
+                'finger_joint2': {"idx": 5, 'bias': 90, 'range': [0, 90]}
                 }
-    CubeMap = {'cube1': {'init': [-0.18, 0, 0.046]}}
+
     # pose error threshold
     PoseErrorThreshold = 5e-3
 
@@ -42,7 +42,9 @@ class ArmEnv(Environment):
         rospy.sleep(2)
         # init joint name
         self.joint_names = ArmJointManager.ArmJointNames
-        # target pose, where cube to be placed, format: [x, y, z, rot_x, rot_y, rot_z]
+        # target pose
+        self.pre_grasp_joints = [0, 0.2834, -0.9736, -1.4648, 0, 0, 0]
+        self.init_joints = self.pre_grasp_joints
         self.target_joints = [1.5707, 0.2834, -1.0471, -1.456, 0]
         # set move counter
         self.move_counter = 0
@@ -62,19 +64,15 @@ class ArmEnv(Environment):
             print '\t', name, v['range']
 
     def __del__(self):
-        self.cube_mgr.remove_cube("Grasp_Object")
+        pass
 
     def reset(self):
         # reset arm joints
-        joint_values = [self.JointMap[name]['init'] for name in self.joint_names[:5]]
-        self.joint_mgr.move_arm_joints(self.joint_names[:5], joint_values)
-        # close gripper
-        self.joint_mgr.open_gripper()
+        # self.joint_mgr.move_arm_joints(self.joint_names[:5], self.init_joints[:5], repeat=3)
+        self.joint_mgr.move_joints(self.joint_names, self.init_joints)
         # reset cube position
-        for k, v in self.CubeMap.items():
-            self.cube_mgr.set_cube_pose(k, v['init'])
+        self.cube_mgr.reset_cube(rand=True)
         # reset cube
-        # self.cube_mgr.reset_cube()
         rospy.sleep(5.0)
         # reset move counter
         self.move_counter = 0
@@ -154,18 +152,18 @@ class ArmEnv(Environment):
         cube_pose = self.cube_mgr.read_cube_pose("cube1")
         dist = self.distance(arm_pose, cube_pose, size=3)
         # print "distance:", dist, ", arm:", arm_pose[:3], ", cube:", cube_pose[:3]
-        return - exp(-1 * self.gamma * dist)
+        return exp(- self.gamma * dist) - 1
 
     def check_collision(self, action):
         valid_action = copy.deepcopy(action)
         try_time = 0
         status = 0
         while self.joint_mgr.check_collision(valid_action):
-            valid_action = map(lambda x: x + random.randint(-5, 5) * DEG_TO_RAD, action)
+            valid_action = map(lambda x: x + random.randint(-4, 4) * DEG_TO_RAD, action)
             valid_action = self.filter_joints(self.joint_names[:5], valid_action)
             try_time += 1
             if try_time > 100:  # attemp too much time, recover init position
-                valid_action = [self.JointMap[name]['init'] for name in self.joint_names[:5]]
+                valid_action = self.init_joints[:5]
                 status = -1
                 break
         return valid_action, status
@@ -179,11 +177,10 @@ class ArmEnv(Environment):
         self.joint_mgr.close_gripper([-0.009, 0.009])
         rospy.sleep(2.0)
         # attach cube
-        # self.joint_mgr.attach_cube("Grasp_Object")
         self.attach_flag = True
         thread.start_new_thread(self.attach_cube_gripper, ("cube1",))
         # place plannar
-        middle_pose = [self.JointMap[name]['init'] for name in self.joint_names[:5]]
+        middle_pose = self.pre_grasp_joints[:5]
         joint_poses = self.joint_mgr.move_plannar(self.joint_names[:5], source_joints, middle_pose)
         for pose in joint_poses:
             self.joint_mgr.move_arm_joints(self.joint_names[:5], pose)
@@ -198,7 +195,6 @@ class ArmEnv(Environment):
         self.joint_mgr.open_gripper()
         self.attach_flag = False
         # remove attach cube
-        # self.joint_mgr.remove_attach_cube("Grasp_Object")
         rospy.sleep(3.0)
 
     def step_forward(self, action):
@@ -206,18 +202,20 @@ class ArmEnv(Environment):
         :param action:  a list of joint values, (float type)
         """
         values = self.joint_mgr.read_joints(self.joint_names[:5])
-        action = [float((a - 1) * 2 * DEG_TO_RAD + v) for a, v in zip(action, values)]
+        joint_action = [float((a - 4) * DEG_TO_RAD + v) for a, v in zip(action[:5], values)]
         # filter joint values
-        action = self.filter_joints(self.joint_names[:5], action)
+        joint_action = self.filter_joints(self.joint_names[:5], joint_action)
         # check collision
-        action, status = self.check_collision(action)
-        self.joint_mgr.move_arm_joints(self.joint_names[:5], action[:5])
+        joint_action, status = self.check_collision(joint_action)
+        self.joint_mgr.move_arm_joints(self.joint_names[:5], joint_action)
         # wait to joint move
         rospy.sleep(0.1) if status == 0 else rospy.sleep(3)
         # check terminal
         self.terminal = self.check_terminal()
         if self.cube_grasped:
             self.place_cube(action[:5])
+        # if action[5] > 0 and not self.cube_grasped:  # error to treat as reach goal
+        #     reward = -2
         reward = self.get_reward()
         state = self.get_state()
         return state, reward, self.terminal

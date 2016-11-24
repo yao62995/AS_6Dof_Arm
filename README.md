@@ -69,6 +69,19 @@
     * 仿真环境Ａgent接口:  asm_env.py
     * 训练脚本：learning.py
 
+## 更新日志 2016-11-24
+* 更改actor 网络的输出层：
+    * 目前actor网络的输出的5个joint的移动角度值，增加一个输出表示cube是否在gripper的抓取范围
+    * 更改actor网络输出层范围区间为[-4, 4]之间的整数
+* 更改reward计算函数 = exp(-1 * γ * dist(cube, gripper))
+* 调整摄像头视野，增加摄像头数量，组成双目摄像头
+    * 提高距离感知，同时避免cube被机械臂遮挡
+* 更改噪音生成函数OuNoice的参数，防止过拟合，探索更多运动空间。
+* 训练阶段：
+    * 第一阶段：一个cube，且cube初始位置不变，gripper初始位置为PreGrasp
+    * 第二阶段：一个cube，且cube初始位置可变，gripper初始位置为PreGrasp
+    * 第三阶段：多个cube，且cube初始位置可变，gripper初始位置为UpRight
+
 ## 更新日志 2016-11-17
 * 碰撞处理
     * 产生碰撞时每个关节随机选择某个(-4,4)的角度范围，并检测碰撞，直到没有检测到碰撞时执行该action
@@ -87,3 +100,5 @@
     * cube相关的话题："/gazebo/cubes"获取cube位姿， "/gazebo/set_link_state"设置cube位姿。
     * cube在moveit中使用scene.add_box()生成并与gazebo中的cube同步
 * 摄像头视野和位置的调整
+* 更改actor 网络的输出层：（Todo）
+    * 目前actor网络的输出的5个joint的移动角度值，增加一个输出表示cube是否在gripper的抓取范围

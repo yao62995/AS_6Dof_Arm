@@ -15,6 +15,9 @@
     <node name="arm_image_view" pkg="image_view" type="image_view" respawn="false"
           output="screen" args="image:=/camera/image_raw"/>
 
+    <node name="arm_image_view_y" pkg="image_view" type="image_view" respawn="false"
+          output="screen" args="image:=/camera_y/image_raw"/>
+
 </launch>
 
 
